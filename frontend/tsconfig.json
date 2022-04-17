@@ -5,7 +5,11 @@
     "baseUrl": ".",
     "paths": {
       "@/*": ["./src/*"]
-    }
+    },
+    "rootDirs": [
+      ".",
+      "../shared"
+    ]
   },
 
   "references": [
