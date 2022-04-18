@@ -85,6 +85,10 @@ export class Game {
     );
   }
 
+  get players() {
+    return this.#players;
+  }
+
   addPlayer(user: User) {
     this.#players.push(user);
     user.socket.on("message", (msg) => {
@@ -99,7 +103,7 @@ export class Game {
             }
             break;
           case "pressed":
-            this.host.send(data);
+            this.host.send({ ...data, id: user.id });
             break;
           case undefined:
           case null:

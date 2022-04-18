@@ -23,8 +23,8 @@ const players = computed(() => {
     };
   });
 });
-let waiting = ref(false);
-let activeIndex: Ref<number | null> = ref(null);
+let waiting = ref(true);
+let activeIndex: Ref<number> = ref(-1);
 
 let animationIndex = ref(0);
 let hostAlreadyTaken = ref(false);
@@ -34,7 +34,7 @@ const pointMod = (user: SerialisedUser, points: number) => {
 };
 
 const sendReady = () => {
-  console.log("pls");
+  waiting.value = false;
   socket.send(JSON.stringify({ action: "ready" }));
 };
 
@@ -70,6 +70,12 @@ socket.onmessage = (msg) => {
         hostAlreadyTaken.value = true;
       }
       break;
+    case "pressed":
+      if (data.id) {
+        activeIndex.value = players.value.findIndex((u) => u.id === data.id);
+      }
+      waiting.value = true;
+      break;
     case undefined:
     case null:
     default:
@@ -85,7 +91,7 @@ socket.onmessage = (msg) => {
         <div
           v-for="(user, index) in players"
           :key="index"
-          :class="['list', { disabled: waiting || activeIndex !== index }]"
+          :class="['list', { enabled: !waiting || activeIndex === index }]"
           @click="user.points += 100"
           @click.right.prevent="user.points -= 100"
         >
@@ -141,11 +147,17 @@ socket.onmessage = (msg) => {
     rgb(0, 0, 0) 0px 0px 0.125rem;
   font-size: 4vw;
   border-radius: 50%;
-  cursor: pointer;
   transition-duration: 0.2s;
   transition-property: filter;
   border-bottom: 1rem solid var(--darker);
   transform-origin: top left;
+  opacity: 0.3;
+  cursor: default;
+}
+
+.big-button.enabled {
+  opacity: 0;
+  cursor: pointer;
 }
 
 .big-button.idle {
@@ -173,15 +185,8 @@ socket.onmessage = (msg) => {
   }
 }
 
-.big-button:hover {
+.big-button.enabled:hover {
   filter: brightness(0.9);
-}
-
-.disabled {
-  filter: none;
-  transition: none;
-  opacity: 0.3;
-  cursor: default;
 }
 
 .bg {

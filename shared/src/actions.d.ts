@@ -13,6 +13,7 @@ export type SetProfileAction = {
 
 export type PressedAction = {
   action: "pressed";
+  id?: string;
 };
 
 export type ReadyAction = {
