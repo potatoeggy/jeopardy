@@ -70,6 +70,7 @@ socket.onmessage = (msg) => {
         id="big-button"
         :class="['bg', 'button-room', color, { disabled: buttonDisabled }]"
         @click="push"
+        @click.right.prevent="push"
       >
         {{ buttonDisabled ? "Waiting..." : "Answer!" }}
       </div>
@@ -102,6 +103,7 @@ socket.onmessage = (msg) => {
   transition-duration: 0.2s;
   transition-property: filter;
   border-bottom: 1rem solid var(--darker);
+  user-select: none;
 }
 
 #big-button:hover {

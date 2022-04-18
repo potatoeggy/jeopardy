@@ -6,10 +6,7 @@ const COLOR_MAP: NameColor[] = ["red", "blue", "yellow", "green"];
 const API_ENDPOINT = "ws://localhost:8080/host";
 const socket = new WebSocket(API_ENDPOINT);
 
-const userData: Ref<SerialisedUser[]> = ref([
-  { id: "123", name: "", points: 0 },
-  { id: "1", name: "", points: 0 },
-]);
+const userData: Ref<SerialisedUser[]> = ref([]);
 const players = computed(() => {
   return userData.value.map((u, index) => {
     const color = COLOR_MAP[index];
@@ -73,29 +70,35 @@ socket.onmessage = (msg) => {
 <template>
   <div class="container">
     <div class="button-room general bg">
-      <div
-        v-for="(user, index) in players"
-        :key="index"
-        :class="{ disabled: waiting || activeIndex !== index }"
-        @click="user.points += 100"
-        @click.right.prevent="user.points -= 100"
-      >
+      <transition-group name="list" tag="">
         <div
-          :class="[
-            'big-button',
-            'center',
-            user.color,
-            {
-              animated: animationIndex % players.length === index,
-            },
-          ]"
+          v-for="(user, index) in players"
+          :key="index"
+          :class="['list', { disabled: waiting || activeIndex !== index }]"
+          @click="user.points += 100"
+          @click.right.prevent="user.points -= 100"
         >
-          {{ user.name }}
+          <div
+            :class="[
+              'big-button',
+              'center',
+              user.color,
+              {
+                animated: animationIndex % players.length === index,
+              },
+            ]"
+          >
+            {{ user.name }}
+          </div>
+          <p class="point-text">
+            {{ user.points }}
+          </p>
         </div>
-        <p class="point-text">
-          {{ user.points }}
-        </p>
-      </div>
+        <div v-if="players.length === 0" class="no-one-here">
+          No one here... <br />
+          Join at jeopardy.bayview.club!
+        </div>
+      </transition-group>
     </div>
     <footer>
       <!--
@@ -209,5 +212,27 @@ footer {
 .point-text:hover {
   cursor: pointer;
   transform: scale(1.2);
+}
+
+.no-one-here {
+  font-size: 4vw;
+  text-align: center;
+  color: gray;
+}
+
+.list-move,
+.list-enter-active,
+.list-leave-active {
+  transition: all 0.5s ease;
+}
+
+.list-enter-from,
+.list-leave-to {
+  opacity: 0;
+  transform: translateX(30px);
+}
+
+.list-leave-active {
+  position: absolute;
 }
 </style>
