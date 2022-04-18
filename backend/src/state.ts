@@ -1,169 +1,112 @@
-import {
-  Action,
-  CanvasEvent,
-  Event,
-  NewRoundEvent,
-  User,
-  UserEvent,
-  VictoryEvent,
-} from "./types";
-import { WIN_CONFIDENCE_THRESHOLD, SYNC_INTERVAL_MS } from "./data/defaults";
-import getLabels from "./recogniser";
+import type { Action, ErrorAction } from "./types";
+import { MessageEvent, WebSocket } from "ws";
+import crypto from "crypto";
 
-export class Guild {
-  users: User[] = [];
-  rounds = 0;
-  alive = true;
+export class User {
   id: string;
-  game: GameManager;
+  socket: WebSocket;
 
-  interval: NodeJS.Timer;
+  #name: string = "Unnamed";
 
-  constructor(id: string, rounds: number) {
-    this.rounds = rounds;
-    this.id = id;
-    this.game = new GameManager(rounds);
-
-    this.interval = setInterval(() => {
-      const winners = this.game.reviewImages(this.users);
-      if (winners.length > 0) {
-        this.fireEventAll(
-          this.generateVictoryEvent(
-            winners[(winners.length * Math.random()) | 0]
-          )
-        );
-        this.game.gamePlaying = false;
-      }
-    }, SYNC_INTERVAL_MS);
+  constructor(socket: WebSocket, name?: string) {
+    this.socket = socket;
+    this.id = crypto.randomUUID();
   }
 
-  addUser(user: User) {
-    this.users.push(user);
-    console.log(`User joined, now ${this.users.length}`);
-
-    this.configureUser(user);
-    this.fireEventAll(this.generateUserEvent());
+  get name() {
+    return this.#name;
   }
 
-  configureUser(user: User) {
-    // on receive
-    user.socket.on("message", (msg) => {
-      console.log(msg);
+  set name(name: string) {
+    this.#name = name;
+  }
+
+  send(event: Action) {
+    this.socket.send(JSON.stringify(event));
+  }
+
+  error(msg: string) {
+    const errorEvent: ErrorAction = { action: "error", error: msg };
+    this.send(errorEvent);
+  }
+}
+
+export class Game {
+  host: User;
+  #players: User[] = [];
+  hostAlive = false;
+
+  /*
+   * It is expected that any function creating a Game is
+   * responsible for detecting and destroying it once the
+   * host leaves.
+   */
+  constructor(host: User) {
+    this.host = host;
+    this.host.socket.on("message", (msg) => {
       try {
         const data: Action = JSON.parse(msg.toString());
         switch (data.action) {
-          case "set_profile":
-            if (!data.name) {
-              return user.error("MissingName");
+          case "ready":
+            for (const u of this.#players) {
+              u.send(data);
             }
-            user.name = data.name;
-            this.fireEventAll(this.generateUserEvent());
-            return;
-          case "draw":
-            if (!data.image) {
-              return user.error("MissingImage");
-            }
-            this.game.setImage(user, data.image);
-            if (this.game.sinceLastSync >= 5) {
-              this.fireEventAll(this.generateCanvasEvent());
-            }
-            return;
-          case "finished":
-            this.game.markFinished(user);
-            if (this.users.every((u) => this.game.userFinished[u.id])) {
-              // if everyone is done go next round
-              if (this.game.startNextRound()) {
-                this.fireEventAll(
-                  this.generateNewRoundEvent(this.game.activeWord)
-                );
-              }
-            }
-            return;
-          case "begin":
-            if (user.isHost) {
-              this.game.beginRound();
-              this.fireEventAll(
-                this.generateNewRoundEvent(this.game.activeWord)
-              );
-            } else {
-              user.error("HostOnlyCommand");
-            }
-            return;
           case undefined:
           case null:
-            return user.error("MissingAction");
+            return this.host.error("MissingAction");
+          default:
+            return this.host.error("InvalidAction");
         }
       } catch (SyntaxError) {
-        return user.error("MalformedJSON");
+        return this.host.error("MalformedJSON");
       }
     });
 
-    // for quitting
-    user.socket.on("close", () => {
-      this.users = this.users.filter((s) => s.id !== user.id);
-      console.log(`User left, now ${this.users.length}`);
+    // kill everything if the host leaves
+    this.host.socket.on("close", () => {
+      for (const u of this.#players) {
+        u.socket.close();
+      }
+      this.hostAlive = false;
+    });
+    this.hostAlive = true;
+  }
 
-      if (user.isHost) {
-        if (this.users.length !== 0) {
-          this.users[0].isHost = true;
+  fireUserEvent() {
+    this.host.send({
+      action: "user",
+      userIds: this.#players.map((u) => u.id),
+    });
+  }
+
+  addPlayer(user: User) {
+    this.#players.push(user);
+    user.socket.addEventListener("message", (msg) => {
+      try {
+        const data: Action = JSON.parse(msg.toString());
+        switch (data.action) {
+          case "setname":
+            if (data.name) {
+              this.host.send(data);
+            }
+          case "pressed":
+            this.host.send(data);
+          case undefined:
+          case null:
+            return this.host.error("MissingAction");
+          default:
+            return this.host.error("InvalidAction");
         }
-
-        console.log("Host left, finding new host");
-      }
-
-      this.fireEventAll(this.generateUserEvent());
-
-      if (this.users.length === 0) {
-        this.alive = false;
-        console.log(`All members left, shutting down guild ${this.id}`);
+      } catch (SyntaxError) {
+        return this.host.error("MalformedJSON");
       }
     });
-  }
 
-  fireEventAll(event: Event) {
-    console.log("Fired event to all users: ", event);
-    for (const u of this.users) {
-      u.send(event);
-    }
-  }
+    user.socket.addEventListener("close", () => {
+      this.#players = this.#players.filter((s) => s.id !== user.id);
+      this.fireUserEvent();
+    });
 
-  generateUserEvent(): UserEvent {
-    return {
-      event: "user_update",
-      guild_id: this.id,
-      users: this.users.map((e) => {
-        return { id: e.id, name: e.name, isHost: e.isHost };
-      }),
-    };
-  }
-
-  generateNewRoundEvent(word: string): NewRoundEvent {
-    return {
-      event: "new_round",
-      total_rounds: this.rounds,
-      word: word,
-    };
-  }
-
-  generateCanvasEvent(): CanvasEvent {
-    const event: CanvasEvent = {
-      event: "draw",
-      images: this.users.map((u) => {
-        return {
-          user_id: u.id,
-          content: this.game.images[u.id] ?? "",
-          confidence: this.game.confidences[u.id] ?? 0,
-        };
-      }),
-    };
-    return event;
-  }
-
-  generateVictoryEvent(user: User): VictoryEvent {
-    const event: VictoryEvent = {
-      event: "victory",
-      victor_user_id: user.id,
-    };
-    return event;
+    this.fireUserEvent();
   }
 }

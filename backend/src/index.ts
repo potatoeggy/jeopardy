@@ -1,54 +1,33 @@
-import { WebSocket, WebSocketServer } from "ws";
-import crypto from "crypto";
-import { Guild } from "./state";
-import { randomGuildId } from "./utils/rng";
-import { ErrorEvent, Event, User } from "./types";
-import { NUM_ROUNDS } from "./data/defaults";
+import { WebSocketServer } from "ws";
+import { Game, User } from "./state";
 
-const guilds: { [key: string]: Guild } = {};
+let game: Game;
+
 const server = new WebSocketServer({ port: 8080 });
 
 server.on("connection", (socket, req) => {
-  const newUser: User = {
-    socket: socket,
-    id: crypto.randomUUID(),
-    name: "Unnamed",
-    send(event: Event) {
-      this.socket.send(JSON.stringify(event));
-    },
-    error(msg: string) {
-      const errorEvent: ErrorEvent = { event: "error", error: msg };
-      this.send(errorEvent);
-    },
-  };
-
-  const url = new URL(`http://${req.headers.host}${req.url}`);
-  console.log("new user joined");
-  const guildHash = url.searchParams.get("guild");
-  const rounds = parseInt(url.searchParams.get("rounds") || "0") || NUM_ROUNDS;
-  if (url.pathname.endsWith("/join")) {
-    // add to existing guild
-    if (!guildHash) {
-      newUser.error("MissingGuildField");
-      return socket.close();
+  if (req.url?.endsWith("/join")) {
+    if (game?.hostAlive) {
+      game.addPlayer(new User(socket));
+    } else {
+      return socket.send(
+        JSON.stringify({
+          action: "error",
+          error: "NoHostAvailable",
+        })
+      );
     }
-    if (!guilds[guildHash]?.alive) {
-      newUser.error("GuildNotFound");
-      return socket.close();
+  } else if (req.url?.endsWith("/host")) {
+    if (game?.hostAlive) {
+      return socket.send(
+        JSON.stringify({
+          action: "error",
+          error: "HostAlreadyTaken",
+        })
+      );
+    } else {
+      game = new Game(new User(socket));
     }
-    guilds[guildHash].addUser(newUser);
-  } else if (url.pathname.endsWith("/host")) {
-    // create new game
-    newUser.isHost = true;
-    let newGuildId;
-    do {
-      newGuildId = guildHash || randomGuildId();
-    } while (guilds[newGuildId]?.alive);
-
-    console.log(`Created guild ${newGuildId}`);
-
-    guilds[newGuildId] = new Guild(newGuildId, rounds);
-    guilds[newGuildId].addUser(newUser);
   }
 });
 console.log("WebSocket server started");
