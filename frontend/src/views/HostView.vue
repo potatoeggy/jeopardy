@@ -27,9 +27,15 @@ let waiting = ref(false);
 let activeIndex: Ref<number | null> = ref(null);
 
 let animationIndex = ref(0);
+let hostAlreadyTaken = ref(false);
 
 const pointMod = (user: SerialisedUser, points: number) => {
   user.points += points;
+};
+
+const sendReady = () => {
+  console.log("pls");
+  socket.send(JSON.stringify({ action: "ready" }));
 };
 
 setInterval(() => animationIndex.value++, 1000);
@@ -59,6 +65,11 @@ socket.onmessage = (msg) => {
         );
       }
       break;
+    case "error":
+      if (data.error === "HostAlreadyTaken") {
+        hostAlreadyTaken.value = true;
+      }
+      break;
     case undefined:
     case null:
     default:
@@ -68,7 +79,7 @@ socket.onmessage = (msg) => {
 </script>
 
 <template>
-  <div class="container">
+  <div class="container" @keyup.enter.capture="sendReady">
     <div class="button-room general bg">
       <transition-group name="list" tag="">
         <div
@@ -94,7 +105,14 @@ socket.onmessage = (msg) => {
             {{ user.points }}
           </p>
         </div>
-        <div v-if="players.length === 0" class="no-one-here">
+        <div
+          v-if="players.length === 0 && hostAlreadyTaken"
+          class="no-one-here"
+        >
+          Game in progress...<br />
+          Please try again later.
+        </div>
+        <div v-else-if="players.length === 0" class="no-one-here">
           No one here... <br />
           Join at jeopardy.bayview.club!
         </div>
@@ -105,6 +123,7 @@ socket.onmessage = (msg) => {
       <label for="name">Name</label>
       <input type="text" id="name" />
       -->
+      <a @click="sendReady">Ready</a>
       <p>{{ players.length }} playing</p>
     </footer>
   </div>
@@ -193,7 +212,7 @@ socket.onmessage = (msg) => {
 footer {
   display: flex;
   align-items: center;
-  justify-content: flex-end;
+  justify-content: space-between;
   align-self: flex-end;
   padding: 1.25rem;
   padding-top: 1.5rem;
@@ -234,5 +253,10 @@ footer {
 
 .list-leave-active {
   position: absolute;
+}
+
+a:hover {
+  text-decoration: underline;
+  cursor: pointer;
 }
 </style>

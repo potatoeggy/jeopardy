@@ -52,6 +52,7 @@ export class Game {
             for (const u of this.#players) {
               u.send(data);
             }
+            break;
           case undefined:
           case null:
             return this.host.error("MissingAction");
@@ -86,16 +87,20 @@ export class Game {
 
   addPlayer(user: User) {
     this.#players.push(user);
-    user.socket.addEventListener("message", (msg) => {
+    user.socket.on("message", (msg) => {
+      console.log("Got", msg);
       try {
         const data: Action = JSON.parse(msg.toString());
+
         switch (data.action) {
           case "setname":
             if (data.name) {
               this.host.send(data);
             }
+            break;
           case "pressed":
             this.host.send(data);
+            break;
           case undefined:
           case null:
             return this.host.error("MissingAction");
@@ -107,7 +112,7 @@ export class Game {
       }
     });
 
-    user.socket.addEventListener("close", () => {
+    user.socket.on("close", () => {
       this.#players = this.#players.filter((s) => s.id !== user.id);
       this.fireUserEvent();
     });
