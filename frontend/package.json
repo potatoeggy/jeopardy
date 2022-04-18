@@ -11,7 +11,9 @@
   "dependencies": {
     "pinia": "^2.0.13",
     "vue": "^3.2.31",
-    "vue-router": "^4.0.14"
+    "vue-confetti": "^2.3.0",
+    "vue-router": "^4.0.14",
+    "ws": "^8.5.0"
   },
   "devDependencies": {
     "@rushstack/eslint-patch": "^1.1.0",

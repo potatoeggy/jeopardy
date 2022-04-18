@@ -1,0 +1,24 @@
+.red {
+  --bg: #e21b3c;
+  --darker: #c21a36;
+}
+
+.blue {
+  --bg: #1368ce;
+  --darker: #0f4f9e;
+}
+
+.green {
+  --bg: #26890c;
+  --darker: #1c6809;
+}
+
+.yellow {
+  --bg: #d89e00;
+  --darker: #c48f00;
+}
+
+.general {
+  --bg-dark: #f2f2f2;
+  --bg-color: #46178f;
+}

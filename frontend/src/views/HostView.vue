@@ -1,15 +1,213 @@
+<script setup lang="ts">
+import { computed, ref, type Ref } from "vue";
+import type { Action, HostUser, NameColor, SerialisedUser } from "../types";
+
+const COLOR_MAP: NameColor[] = ["red", "blue", "yellow", "green"];
+const API_ENDPOINT = "ws://localhost:8080/host";
+const socket = new WebSocket(API_ENDPOINT);
+
+const userData: Ref<SerialisedUser[]> = ref([
+  { id: "123", name: "", points: 0 },
+  { id: "1", name: "", points: 0 },
+]);
+const players = computed(() => {
+  return userData.value.map((u, index) => {
+    const color = COLOR_MAP[index];
+    const displayName =
+      u.name === ""
+        ? color.charAt(0).toUpperCase() + color.substring(1)
+        : u.name;
+
+    return {
+      id: u.id,
+      name: displayName,
+      color: color,
+      points: u.points,
+    };
+  });
+});
+let waiting = ref(false);
+let activeIndex: Ref<number | null> = ref(null);
+
+let animationIndex = ref(0);
+
+const pointMod = (user: SerialisedUser, points: number) => {
+  user.points += points;
+};
+
+setInterval(() => animationIndex.value++, 1000);
+
+socket.onmessage = (msg) => {
+  const data: Action = JSON.parse(msg.data);
+  console.log(data);
+  switch (data.action) {
+    case "setname":
+      break;
+    case "user":
+      if (data.userIds.length <= 4) {
+        // remove ones that don't exist
+        userData.value = userData.value.filter((u) =>
+          data.userIds.includes(u.id)
+        );
+
+        // add ones that don't exist
+        userData.value.push(
+          ...data.userIds
+            .filter(
+              (a) => userData.value.filter((u) => u.id === a).length === 0
+            )
+            .map((id) => {
+              return { id: id, name: "", points: 0 };
+            })
+        );
+      }
+      break;
+    case undefined:
+    case null:
+    default:
+      return;
+  }
+};
+</script>
+
 <template>
-  <div class="about">
-    <h1>This is an about page</h1>
+  <div class="container">
+    <div class="button-room general bg">
+      <div
+        v-for="(user, index) in players"
+        :key="index"
+        :class="{ disabled: waiting || activeIndex !== index }"
+        @click="user.points += 100"
+        @click.right.prevent="user.points -= 100"
+      >
+        <div
+          :class="[
+            'big-button',
+            'center',
+            user.color,
+            {
+              animated: animationIndex % players.length === index,
+            },
+          ]"
+        >
+          {{ user.name }}
+        </div>
+        <p class="point-text">
+          {{ user.points }}
+        </p>
+      </div>
+    </div>
+    <footer>
+      <!--
+      <label for="name">Name</label>
+      <input type="text" id="name" />
+      -->
+      <p>{{ players.length }} playing</p>
+    </footer>
   </div>
 </template>
 
-<style>
-@media (min-width: 1024px) {
-  .about {
-    min-height: 100vh;
-    display: flex;
-    align-items: center;
+<style scoped>
+@import "../assets/colors.css";
+.big-button {
+  --width: 18vw;
+  width: var(--width);
+  height: var(--width);
+  background: var(--bg);
+  color: white;
+  text-shadow: rgba(0, 0, 0, 0.25) 0px 0.125rem 0px,
+    rgb(0, 0, 0) 0px 0px 0.125rem;
+  font-size: 4vw;
+  border-radius: 50%;
+  cursor: pointer;
+  transition-duration: 0.2s;
+  transition-property: filter;
+  border-bottom: 1rem solid var(--darker);
+  transform-origin: top left;
+}
+
+.big-button.idle {
+  border-radius: 3vmin;
+}
+
+.big-button.animated {
+  animation-name: bounce;
+  animation-duration: 1s;
+}
+
+@keyframes bounce {
+  0%,
+  20%,
+  50%,
+  80%,
+  100% {
+    transform: translateY(0);
   }
+  40% {
+    transform: translateY(-2rem);
+  }
+  60% {
+    transform: translateY(-1rem);
+  }
+}
+
+.big-button:hover {
+  filter: brightness(0.9);
+}
+
+.disabled {
+  filter: none;
+  transition: none;
+  opacity: 0.3;
+  cursor: default;
+}
+
+.bg {
+  background: var(--bg-dark);
+  box-shadow: 0.2rem 0.2rem 0.2rem 0.2rem lightgray;
+}
+
+.button-room {
+  display: flex;
+  justify-content: space-evenly;
+  align-items: center;
+  height: 100%;
+}
+
+.center {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.container {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  height: 100%;
+}
+
+footer {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  align-self: flex-end;
+  padding: 1.25rem;
+  padding-top: 1.5rem;
+  font-size: 1.25rem;
+  width: 100%;
+}
+
+.point-text {
+  text-align: center;
+  font-size: 4vw;
+  margin-top: 1rem;
+  transition: transform 0.2s;
+  user-select: none;
+}
+
+.point-text:hover {
+  cursor: pointer;
+  transform: scale(1.2);
 }
 </style>

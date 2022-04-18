@@ -1,12 +1,12 @@
-import type { Action, ErrorAction } from "./types";
-import { MessageEvent, WebSocket } from "ws";
+import type { Action, ErrorAction, UserAction } from "./types";
 import crypto from "crypto";
+import { MessageEvent, WebSocket } from "ws";
 
 export class User {
   id: string;
   socket: WebSocket;
 
-  #name: string = "Unnamed";
+  #name: string = "";
 
   constructor(socket: WebSocket, name?: string) {
     this.socket = socket;
@@ -22,6 +22,7 @@ export class User {
   }
 
   send(event: Action) {
+    console.log("Sent", event, "to ", this.id);
     this.socket.send(JSON.stringify(event));
   }
 
@@ -73,10 +74,14 @@ export class Game {
   }
 
   fireUserEvent() {
-    this.host.send({
+    const userEvent: UserAction = {
       action: "user",
       userIds: this.#players.map((u) => u.id),
-    });
+    };
+    this.host.send(userEvent);
+    this.#players.forEach((u, index) =>
+      u.send({ action: "color", number: index })
+    );
   }
 
   addPlayer(user: User) {

@@ -3,7 +3,8 @@ export type Action =
   | PressedAction
   | ReadyAction
   | ErrorAction
-  | UserAction;
+  | UserAction
+  | ChangeColorAction;
 
 export type SetProfileAction = {
   action: "setname";
@@ -26,4 +27,9 @@ export type ErrorAction = {
 export type UserAction = {
   action: "user";
   userIds: string[]; // ids
+};
+
+export type ChangeColorAction = {
+  action: "color";
+  number: number;
 };
