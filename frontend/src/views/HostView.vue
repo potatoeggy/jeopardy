@@ -1,9 +1,16 @@
 <script setup lang="ts">
 import { computed, ref, type Ref } from "vue";
 import type { Action, HostUser, NameColor, SerialisedUser } from "../types";
+import IconVolumeOff from "../components/icons/IconVolumeOff.vue";
+import IconVolumeUp from "../components/icons/IconVolumeUp.vue";
 
 const COLOR_MAP: NameColor[] = ["red", "blue", "yellow", "green"];
 const API_ENDPOINT = "ws://localhost:8080/host";
+const AUDIO_FILES: { path: string; loop?: boolean }[] = [
+  { path: "kahoot-lobby.mp3", loop: true },
+  { path: "jeopardy-think.mp3" },
+  { path: "among-us-buzzer.mp3" },
+];
 const socket = new WebSocket(API_ENDPOINT);
 
 const userData: Ref<SerialisedUser[]> = ref([]);
@@ -23,17 +30,45 @@ const players = computed(() => {
     };
   });
 });
-let waiting = ref(true);
-let activeIndex: Ref<number> = ref(-1);
+const waiting = ref(true);
+const activeIndex: Ref<number> = ref(-1);
 
-let animationIndex = ref(0);
-let hostAlreadyTaken = ref(false);
+const animationIndex = ref(0);
+const animationOn = ref(true);
+const hostAlreadyTaken = ref(false);
+
+const audioOn = ref(false);
+const currentAudioRef = ref(0);
+const audioRefs: Ref<HTMLAudioElement[]> = ref([]);
+
+const toggleAudio = () => {
+  if (audioOn.value) {
+    console.log("we rushing so you can't disable it once you turn it on");
+    return;
+  }
+  if (audioOn.value) {
+    audioRefs.value[currentAudioRef.value].pause();
+  } else {
+    audioRefs.value[currentAudioRef.value].play();
+  }
+  audioOn.value = !audioOn.value;
+};
 
 const pointMod = (user: SerialisedUser, points: number) => {
   user.points += points;
 };
 
 const sendReady = () => {
+  // if we're in the end screen restore to normal
+  // or if we accidentally hit the ready button
+  // but don't want it
+  if (!animationOn.value || !waiting.value) {
+    waiting.value = true;
+    animationOn.value = true;
+    activeIndex.value = -1;
+    return;
+  }
+  audioRefs.value[0].pause();
   waiting.value = false;
   socket.send(JSON.stringify({ action: "ready" }));
 };
@@ -73,8 +108,10 @@ socket.onmessage = (msg) => {
     case "pressed":
       if (data.id) {
         activeIndex.value = players.value.findIndex((u) => u.id === data.id);
+        audioRefs.value[2].play();
+        animationOn.value = false;
+        waiting.value = true;
       }
-      waiting.value = true;
       break;
     case undefined:
     case null:
@@ -85,13 +122,29 @@ socket.onmessage = (msg) => {
 </script>
 
 <template>
+  <audio
+    v-for="(audio, index) in AUDIO_FILES"
+    :key="index"
+    ref="audioRefs"
+    :loop="audio.loop"
+    preload="auto"
+  >
+    <source :src="`/${audio.path}`" />
+  </audio>
   <div class="container" @keyup.enter.capture="sendReady">
     <div class="button-room general bg">
       <transition-group name="list" tag="">
         <div
           v-for="(user, index) in players"
           :key="index"
-          :class="['list', { enabled: !waiting || activeIndex === index }]"
+          :class="[
+            'list',
+            {
+              enabled: !waiting || activeIndex === index,
+              'active-index': activeIndex === index && !animationOn,
+              'not-active-index': activeIndex !== index && !animationOn,
+            },
+          ]"
           @click="user.points += 100"
           @click.right.prevent="user.points -= 100"
         >
@@ -101,7 +154,8 @@ socket.onmessage = (msg) => {
               'center',
               user.color,
               {
-                animated: animationIndex % players.length === index,
+                animated:
+                  animationIndex % players.length === index && animationOn,
               },
             ]"
           >
@@ -129,7 +183,11 @@ socket.onmessage = (msg) => {
       <label for="name">Name</label>
       <input type="text" id="name" />
       -->
-      <a @click="sendReady">Ready</a>
+      <div class="corner">
+        <icon-volume-up v-if="audioOn" @click="toggleAudio" />
+        <icon-volume-off v-else @click="toggleAudio" />
+        <a @click="sendReady">Ready</a>
+      </div>
       <p>{{ players.length }} playing</p>
     </footer>
   </div>
@@ -137,6 +195,17 @@ socket.onmessage = (msg) => {
 
 <style scoped>
 @import "../assets/colors.css";
+.active-index {
+  transform: scale(1.25);
+}
+
+.not-active-index {
+  transform: scale(0.75);
+}
+.corner {
+  display: flex;
+  gap: 0.5rem;
+}
 .big-button {
   --width: 18vw;
   width: var(--width);
@@ -153,10 +222,11 @@ socket.onmessage = (msg) => {
   transform-origin: top left;
   opacity: 0.3;
   cursor: default;
+  user-select: none;
 }
 
-.big-button.enabled {
-  opacity: 0;
+.enabled > .big-button {
+  opacity: 1;
   cursor: pointer;
 }
 
@@ -231,6 +301,11 @@ footer {
   margin-top: 1rem;
   transition: transform 0.2s;
   user-select: none;
+  opacity: 0.3;
+}
+
+.enabled > .point-text {
+  opacity: 1;
 }
 
 .point-text:hover {

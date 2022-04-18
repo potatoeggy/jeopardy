@@ -151,6 +151,6 @@ footer {
 
 footer > span {
   display: flex;
-  gap: 1rem;
+  gap: 0.5rem;
 }
 </style>
