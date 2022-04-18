@@ -5,7 +5,7 @@ import ServerErrorDialog from "../components/ServerErrorDialog.vue";
 import IconCloudOff from "../components/icons/IconCloudOff.vue";
 import IconCloudOn from "../components/icons/IconCloudOn.vue";
 
-const API_ENDPOINT = "ws://localhost:8080/join";
+const API_ENDPOINT = "wss://api.eggworld.tk/sketch/join";
 const COLORS: NameColor[] = ["red", "blue", "yellow", "green"];
 let socket = new WebSocket(API_ENDPOINT);
 

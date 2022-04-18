@@ -10,7 +10,7 @@ import IconCloudOn from "../components/icons/IconCloudOn.vue";
 import IconCloudOff from "../components/icons/IconCloudOff.vue";
 
 const COLOR_MAP: NameColor[] = ["red", "blue", "yellow", "green"];
-const API_ENDPOINT = "ws://localhost:8080/host";
+const API_ENDPOINT = "wss://api.eggworld.tk/sketch/host";
 const AUDIO_FILES: { path: string; loop?: boolean }[] = [
   { path: "kahoot-lobby.mp3", loop: true },
   { path: "jeopardy-think.mp3" },
