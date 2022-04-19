@@ -1,3 +1,7 @@
+:root {
+  --magenta: #ec1f64;
+}
+
 .red {
   --bg: #e21b3c;
   --darker: #c21a36;

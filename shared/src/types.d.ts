@@ -11,3 +11,17 @@ export type SerialisedUser = {
 export type HostUser = SerialisedUser & {
   color: NameColor;
 };
+
+export type Question = {
+  question: string;
+  answer: string;
+  points: number;
+  completed?: boolean;
+};
+
+export type Column = {
+  heading: string;
+  questions: Question[];
+};
+
+export type Board = Column[];

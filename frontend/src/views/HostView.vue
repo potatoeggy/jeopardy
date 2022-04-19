@@ -3,6 +3,7 @@ import { computed, ref, type Ref } from "vue";
 import type { Action, HostUser, NameColor, SerialisedUser } from "../types";
 import IconVolumeOff from "../components/icons/IconVolumeOff.vue";
 import IconVolumeUp from "../components/icons/IconVolumeUp.vue";
+import JeopardyGame from "../components/JeopardyGame.vue";
 
 const COLOR_MAP: NameColor[] = ["red", "blue", "yellow", "green"];
 const API_ENDPOINT = "ws://localhost:8080/host";
@@ -106,7 +107,7 @@ socket.onmessage = (msg) => {
       }
       break;
     case "pressed":
-      if (data.id) {
+      if (data.id && !waiting.value) {
         activeIndex.value = players.value.findIndex((u) => u.id === data.id);
         audioRefs.value[2].play();
         animationOn.value = false;
@@ -132,6 +133,7 @@ socket.onmessage = (msg) => {
     <source :src="`/${audio.path}`" />
   </audio>
   <div class="container" @keyup.enter.capture="sendReady">
+    <jeopardy-game :game-number="1" v-if="false" />
     <div class="button-room general bg">
       <transition-group name="list" tag="">
         <div
