@@ -49,7 +49,10 @@ export class Game {
         const data: Action = JSON.parse(msg.toString());
         switch (data.action) {
           case "ready":
-            for (const u of this.#players) {
+            const players = data.ids
+              ? this.#players.filter((u) => data.ids?.includes(u.id))
+              : this.#players;
+            for (const u of players) {
               u.send(data);
             }
             break;

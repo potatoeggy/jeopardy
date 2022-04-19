@@ -1,29 +1,33 @@
 <script setup lang="ts">
 import { computed, ref, type Ref } from "vue";
 import gameJson from "../data/games";
-import type { Board, Question } from "../types";
+import type { Board, HostUser, Question } from "../types";
 import InfoCard from "./InfoCard.vue";
 
-const props = defineProps<{ gameNumber: number }>();
+const props = defineProps<{ gameNumber: number; users: HostUser[] }>();
 
-const games: Board[] = gameJson.map((game) =>
-  game.map((category) => {
-    return {
-      heading: category.heading,
-      questions: category.questions.map((question, index) => {
-        return {
-          question: question[0],
-          answer: question[1],
-          points: (index + 1) * 100,
-          completed: false,
-        };
-      }),
-    };
-  })
+const games: Ref<Board[]> = ref(
+  gameJson.map((game) =>
+    game.map((category) => {
+      return {
+        heading: category.heading,
+        questions: category.questions.map((question, index) => {
+          return {
+            question: question[0],
+            answer: question[1],
+            points: (index + 1) * 100,
+            completed: false,
+          };
+        }),
+      };
+    })
+  )
 );
 
-const currentGame = computed(() => games[props.gameNumber]);
-const currentQuestion: Ref<Question | null> = ref(null);
+const currentGame = computed(() => games.value[props.gameNumber]);
+
+// game state
+const turn = ref(0);
 
 // generate proper display board from games
 </script>
@@ -39,6 +43,7 @@ const currentQuestion: Ref<Question | null> = ref(null);
           :column-no="i"
           :completed="question.completed"
           :key="index"
+          @completed="question.completed = !question.completed"
         />
       </template>
     </div>
@@ -60,7 +65,7 @@ const currentQuestion: Ref<Question | null> = ref(null);
   grid-template-columns: repeat(5, minmax(0, 1fr));
   grid-template-rows: repeat(6, minmax(0, 1fr));
   height: 100%;
-  margin-bottom: 5vh;
+  margin-bottom: 10vh;
   margin-left: 5vw;
   margin-right: 5vw;
 }
@@ -81,7 +86,8 @@ const currentQuestion: Ref<Question | null> = ref(null);
   /* headers */
   color: white;
   border: none;
-  font-size: 3vw;
+  font-size: 2vw;
   background: none;
+  text-align: center;
 }
 </style>

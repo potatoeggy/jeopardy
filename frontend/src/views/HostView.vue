@@ -37,6 +37,7 @@ const activeIndex: Ref<number> = ref(-1);
 const animationIndex = ref(0);
 const animationOn = ref(true);
 const hostAlreadyTaken = ref(false);
+const showGame = ref(false);
 
 const audioOn = ref(false);
 const currentAudioRef = ref(0);
@@ -72,6 +73,10 @@ const sendReady = () => {
   audioRefs.value[0].pause();
   waiting.value = false;
   socket.send(JSON.stringify({ action: "ready" }));
+};
+
+const startGame = () => {
+  showGame.value = !showGame.value;
 };
 
 setInterval(() => animationIndex.value++, 1000);
@@ -133,8 +138,8 @@ socket.onmessage = (msg) => {
     <source :src="`/${audio.path}`" />
   </audio>
   <div class="container" @keyup.enter.capture="sendReady">
-    <jeopardy-game :game-number="1" v-if="false" />
-    <div class="button-room general bg">
+    <jeopardy-game :game-number="0" :users="players" v-if="showGame" />
+    <div class="button-room general bg" v-else>
       <transition-group name="list" tag="">
         <div
           v-for="(user, index) in players"
@@ -189,6 +194,7 @@ socket.onmessage = (msg) => {
         <icon-volume-up v-if="audioOn" @click="toggleAudio" />
         <icon-volume-off v-else @click="toggleAudio" />
         <a @click="sendReady">Ready</a>
+        <a @click="startGame"> / Toggle</a>
       </div>
       <p>{{ players.length }} playing</p>
     </footer>

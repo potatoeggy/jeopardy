@@ -3,7 +3,10 @@ const games = [
     {
       heading: "Hardware",
       questions: [
-        ["2", "what is a 2"],
+        [
+          "A world full of people that is on fire but unfortunately still alive",
+          "what is a 2",
+        ],
         ["2", "what is a 2"],
         ["2", "what is a 2"],
         ["2", "what is a 2"],

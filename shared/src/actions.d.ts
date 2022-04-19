@@ -18,6 +18,7 @@ export type PressedAction = {
 
 export type ReadyAction = {
   action: "ready";
+  ids?: string[];
 };
 
 export type ErrorAction = {
