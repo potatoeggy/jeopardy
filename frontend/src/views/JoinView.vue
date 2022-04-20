@@ -39,8 +39,8 @@ socket.onmessage = (msg) => {
   switch (data?.action) {
     case "ready":
       pressAllowed.value = true;
-      // if it isn't pressed, disable after 15 s
-      setTimeout(() => (pressAllowed.value = false), 15000);
+      // if it isn't pressed, disable after 20 s
+      setTimeout(() => (pressAllowed.value = false), 20000);
       break;
     case "error":
       if (data.error === "NoHostAvailable") {

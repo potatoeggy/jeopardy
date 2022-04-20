@@ -4,6 +4,7 @@ import type { Action, HostUser, NameColor, SerialisedUser } from "../types";
 import IconVolumeOff from "../components/icons/IconVolumeOff.vue";
 import IconVolumeUp from "../components/icons/IconVolumeUp.vue";
 import JeopardyGame from "../components/JeopardyGame.vue";
+import { useCounterStore } from "@/stores/counter";
 
 const COLOR_MAP: NameColor[] = ["red", "blue", "yellow", "green"];
 const API_ENDPOINT = "ws://localhost:8080/host";
@@ -32,12 +33,15 @@ const players = computed(() => {
   });
 });
 const waiting = ref(true);
-const activeIndex: Ref<number> = ref(-1);
+const activeIndex: Ref<number[]> = ref([]);
 
 const animationIndex = ref(0);
 const animationOn = ref(true);
 const hostAlreadyTaken = ref(false);
 const showGame = ref(false);
+const finalMode = ref(false);
+const currentUserIndex = ref(0);
+const buttonCooldown = ref(false); // ignore all button presses
 
 const audioOn = ref(false);
 const currentAudioRef = ref(0);
@@ -67,7 +71,7 @@ const sendReady = () => {
   if (!animationOn.value || !waiting.value) {
     waiting.value = true;
     animationOn.value = true;
-    activeIndex.value = -1;
+    activeIndex.value = [];
     return;
   }
   audioRefs.value[0].pause();
@@ -75,8 +79,27 @@ const sendReady = () => {
   socket.send(JSON.stringify({ action: "ready" }));
 };
 
+const sendReadySpecial = () => {
+  activeIndex.value = useCounterStore().beepUsers;
+  setTimeout(() => (activeIndex.value = []), 5000);
+  socket.send(
+    JSON.stringify({
+      action: "ready",
+      ids: useCounterStore().beepUsers.map((i) => players.value[i].id),
+    })
+  );
+};
+
 const startGame = () => {
   showGame.value = !showGame.value;
+};
+
+const toggleFinal = () => {
+  if (!finalMode.value && showGame.value) {
+    showGame.value = false;
+  }
+  finalMode.value = !finalMode.value;
+  waiting.value = !finalMode.value;
 };
 
 setInterval(() => animationIndex.value++, 1000);
@@ -113,10 +136,16 @@ socket.onmessage = (msg) => {
       break;
     case "pressed":
       if (data.id && !waiting.value) {
-        activeIndex.value = players.value.findIndex((u) => u.id === data.id);
+        activeIndex.value = [players.value.findIndex((u) => u.id === data.id)];
         audioRefs.value[2].play();
-        animationOn.value = false;
         waiting.value = true;
+        buttonCooldown.value = true;
+        useCounterStore().toggleButtonPressed();
+        setTimeout(() => {
+          buttonCooldown.value = false;
+          activeIndex.value = [];
+          useCounterStore().toggleButtonPressed();
+        }, 4000);
       }
       break;
     case undefined:
@@ -138,52 +167,62 @@ socket.onmessage = (msg) => {
     <source :src="`/${audio.path}`" />
   </audio>
   <div class="container" @keyup.enter.capture="sendReady">
-    <jeopardy-game :game-number="0" :users="players" v-if="showGame" />
-    <div class="button-room general bg" v-else>
-      <transition-group name="list" tag="">
-        <div
-          v-for="(user, index) in players"
-          :key="index"
-          :class="[
-            'list',
-            {
-              enabled: !waiting || activeIndex === index,
-              'active-index': activeIndex === index && !animationOn,
-              'not-active-index': activeIndex !== index && !animationOn,
-            },
-          ]"
-          @click="user.points += 100"
-          @click.right.prevent="user.points -= 100"
-        >
+    <div class="game-container">
+      <jeopardy-game
+        :game-number="0"
+        :users="players"
+        :current-user-index="currentUserIndex"
+        @request-buzzer="sendReadySpecial"
+      />
+
+      <div :class="['button-room', 'general', 'bg', { overlay: showGame }]">
+        <p class="final-label" v-if="finalMode">Final Jeopardy</p>
+        <transition-group name="list" tag="">
           <div
+            v-for="(user, index) in players"
+            :key="index"
             :class="[
-              'big-button',
-              'center',
-              user.color,
+              'list',
               {
-                animated:
-                  animationIndex % players.length === index && animationOn,
+                enabled: !waiting || activeIndex.includes(index),
+                'active-index': activeIndex.includes(index) && !animationOn,
+                'not-active-index':
+                  !activeIndex.includes(index) && !animationOn,
               },
             ]"
+            @click="user.points += 100"
+            @click.right.prevent="user.points -= 100"
           >
-            {{ user.name }}
+            <div
+              :class="[
+                'big-button',
+                'center',
+                user.color,
+                {
+                  animated:
+                    animationIndex % players.length === index && animationOn,
+                },
+              ]"
+            >
+              <p>{{ user.name }}</p>
+            </div>
+            <p class="point-text">
+              {{ user.points }}
+            </p>
           </div>
-          <p class="point-text">
-            {{ user.points }}
-          </p>
-        </div>
-        <div
-          v-if="players.length === 0 && hostAlreadyTaken"
-          class="no-one-here"
-        >
-          Game in progress...<br />
-          Please try again later.
-        </div>
-        <div v-else-if="players.length === 0" class="no-one-here">
-          No one here... <br />
-          Join at jeopardy.bayview.club!
-        </div>
-      </transition-group>
+          <div
+            v-if="players.length === 0 && hostAlreadyTaken"
+            class="no-one-here"
+          >
+            Game in progress...<br />
+            Please try again later.
+          </div>
+          <div v-else-if="players.length === 0" class="no-one-here">
+            No one here... <br />
+            Join at jeopardy.bayview.club!
+          </div>
+        </transition-group>
+      </div>
     </div>
     <footer>
       <!--
@@ -193,8 +232,9 @@ socket.onmessage = (msg) => {
       <div class="corner">
         <icon-volume-up v-if="audioOn" @click="toggleAudio" />
         <icon-volume-off v-else @click="toggleAudio" />
-        <a @click="sendReady">Ready</a>
-        <a @click="startGame"> / Toggle</a>
+        <a @click="sendReady">Ready</a> / <a @click="startGame">Toggle</a> /
+        <a @click="toggleFinal">Final</a> /
+        <a>Steal</a>
       </div>
       <p>{{ players.length }} playing</p>
     </footer>
@@ -203,6 +243,23 @@ socket.onmessage = (msg) => {
 
 <style scoped>
 @import "../assets/colors.css";
+
+.general {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  right: 0;
+  transition: all 0.5s ease;
+  z-index: 10;
+}
+
+.game-container {
+  position: relative;
+  height: 100%;
+}
 .active-index {
   transform: scale(1.25);
 }
@@ -269,7 +326,7 @@ socket.onmessage = (msg) => {
 
 .bg {
   background: var(--bg-dark);
-  box-shadow: 0.2rem 0.2rem 0.2rem 0.2rem lightgray;
+  box-shadow: 0.2rem 0.2rem 0.6rem 0.2rem rgba(0, 0, 0, 0.5);
 }
 
 .button-room {
@@ -327,6 +384,11 @@ footer {
   color: gray;
 }
 
+.list {
+  display: flex;
+  flex-direction: column;
+}
+
 .list-move,
 .list-enter-active,
 .list-leave-active {
@@ -346,5 +408,45 @@ footer {
 a:hover {
   text-decoration: underline;
   cursor: pointer;
+}
+
+a {
+  user-select: none;
+}
+
+.general.overlay {
+  height: 15%;
+  top: 85%;
+  background: gray;
+}
+
+.general.overlay .list {
+  flex-direction: row;
+  align-items: center;
+  gap: 2rem;
+}
+
+.general.overlay .big-button {
+  --width: 9vmin;
+}
+
+.general.overlay .big-button > p {
+  display: none;
+}
+
+.general.overlay .point-text {
+  margin: 0;
+  color: white;
+  opacity: 1;
+}
+
+.general * {
+  transition: all 0.4s ease;
+}
+
+.final-label {
+  position: absolute;
+  z-index: 10;
+  left: 50%;
 }
 </style>

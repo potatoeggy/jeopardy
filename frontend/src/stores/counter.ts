@@ -1,17 +1,23 @@
 import { defineStore } from "pinia";
+import type { HostUser, Question } from "../types";
 
 export const useCounterStore = defineStore({
   id: "counter",
   state: () => ({
     // game state
-    counter: 0,
+    buttonPressed: false,
+    activeQuestion: null as Question | null,
+    beepUsers: [] as number[],
   }),
-  getters: {
-    doubleCount: (state) => state.counter * 2,
-  },
   actions: {
-    increment() {
-      this.counter++;
+    toggleButtonPressed() {
+      this.buttonPressed = !this.buttonPressed;
+    },
+    setQuestion(question: Question) {
+      this.activeQuestion = question;
+    },
+    setUsers(users: number[]) {
+      this.beepUsers = users;
     },
   },
 });

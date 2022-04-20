@@ -4,7 +4,13 @@ import gameJson from "../data/games";
 import type { Board, HostUser, Question } from "../types";
 import InfoCard from "./InfoCard.vue";
 
-const props = defineProps<{ gameNumber: number; users: HostUser[] }>();
+const props = defineProps<{
+  gameNumber: number;
+  users: HostUser[];
+  currentUserIndex: number; // we could put this into store
+}>();
+
+const emit = defineEmits(["request-buzzer"]);
 
 const games: Ref<Board[]> = ref(
   gameJson.map((game) =>
@@ -43,7 +49,10 @@ const turn = ref(0);
           :column-no="i"
           :completed="question.completed"
           :key="index"
+          :users="users"
+          :current-user-index="currentUserIndex"
           @completed="question.completed = !question.completed"
+          @request-buzzer="emit('request-buzzer')"
         />
       </template>
     </div>
@@ -55,7 +64,7 @@ const turn = ref(0);
 
 .container {
   background: #ec1f64;
-  position: relative;
+  height: 100%;
 }
 
 .table {

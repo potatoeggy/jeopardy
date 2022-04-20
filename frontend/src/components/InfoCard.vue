@@ -1,14 +1,17 @@
 <script setup lang="ts">
-import { computed, ref } from "vue";
-import type { Question } from "../types";
+import { useCounterStore } from "@/stores/counter";
+import { computed, ref, watch } from "vue";
+import type { HostUser, Question } from "../types";
 
 const props = defineProps<{
   question: Question;
   completed?: boolean;
   columnNo: number;
+  users: HostUser[];
+  currentUserIndex: number;
 }>();
 
-const emit = defineEmits(["completed"]);
+const emit = defineEmits(["completed", "exit", "request-buzzer"]);
 
 // hardcoding let's go
 const offsetLeft = computed(() => {
@@ -24,11 +27,52 @@ const offsetBottom = computed(() => {
 const showQuestion = ref(false);
 const showAnswer = ref(false);
 
+const stealAllowed = ref(false);
+
+const timerNum = ref(20);
+const timerId = ref(0);
+
+const store = useCounterStore();
+
+const requestBuzzer = (users: number[]) => {
+  store.setUsers(users);
+  emit("request-buzzer");
+};
+
 const clickStart = () => {
   if (props.completed && !showQuestion.value) {
     return;
   }
   showQuestion.value = !showQuestion.value;
+
+  if (!showQuestion.value) {
+    clearInterval(timerId.value);
+    emit("exit"); // TODO: check wincon
+  }
+
+  if (showQuestion.value) {
+    setTimeout(() => {
+      timerNum.value = 20;
+      requestBuzzer([props.currentUserIndex]);
+      timerId.value = setInterval(() => {
+        timerNum.value--;
+        if (timerNum.value <= 0) {
+          requestBuzzer(
+            (() => {
+              const a: number[] = [];
+              for (let i = 0; i < props.users.length; i++) {
+                // why isn't there an easier way
+                if (i === props.currentUserIndex) continue;
+                a.push(i);
+              }
+              return a;
+            })()
+          );
+          clearTimeout(timerId.value);
+        }
+      }, 1000);
+    }, 4000);
+  }
   showAnswer.value = false;
 };
 
@@ -37,9 +81,18 @@ const clickAnswer = () => {
     emit("completed");
     return;
   }
+
+  clearInterval(timerId.value);
+  timerNum.value = 0;
   showAnswer.value = !showAnswer.value;
   emit("completed");
 };
+
+watch(store.$state, (first, second) => {
+  if (showQuestion.value && second.buttonPressed) {
+    clearInterval(timerId.value);
+  }
+});
 </script>
 
 <template>
@@ -50,7 +103,10 @@ const clickAnswer = () => {
       @click="clickStart"
       @click.right.prevent="clickAnswer"
     >
-      <p>{{ question.points }}<span v-if="showQuestion"> points</span></p>
+      <div class="circle" v-if="showQuestion && timerNum">{{ timerNum }}</div>
+      <p class="highlight">
+        {{ question.points }}<span v-if="showQuestion"> points</span>
+      </p>
       <template v-if="showQuestion">
         <p>&nbsp;</p>
         <p :class="['question', { smaller: showAnswer }]">
@@ -63,6 +119,21 @@ const clickAnswer = () => {
 </template>
 
 <style scoped>
+.circle {
+  position: absolute;
+  right: 5%;
+  top: 4%;
+  width: 16vmin;
+  height: 16vmin;
+  border-radius: 50%;
+  font-size: 7vmin;
+  background: #ec1f64;
+  z-index: 3;
+  display: grid;
+  place-items: center;
+  color: white;
+  transition: all 0.25s ease;
+}
 .card:hover:not(.completed):not(.fullscreen) {
   /* tiles */
   transform: scale(1.1);
@@ -114,21 +185,31 @@ const clickAnswer = () => {
   flex-direction: column;
   align-items: center;
   justify-content: flex-start;
-  padding-top: 10%;
+  padding-top: 5%;
   box-shadow: 0.2rem 0.2rem 0.2rem 0.2rem rgb(167, 164, 164);
   background: #ececec;
   opacity: 1;
 }
 
+.card.fullscreen .highlight {
+  background: #ec1f64;
+  color: white;
+  border-radius: 2vmin;
+  padding: 0.5rem;
+}
+
 .question {
-  font-size: 7vh;
-  margin: 5%;
+  font-size: 5vh;
+  margin-left: 20%;
+  margin-right: 20%;
+  margin-bottom: 5%;
   text-align: center;
   transition: all 0.25s ease;
+  transform: scale(1.5) translateY(100%);
 }
 
 .question.smaller {
-  font-size: 5vh;
+  transform: none;
 }
 
 .answer {
