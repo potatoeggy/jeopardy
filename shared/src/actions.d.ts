@@ -4,7 +4,8 @@ export type Action =
   | ReadyAction
   | ErrorAction
   | UserAction
-  | ChangeColorAction;
+  | ChangeColorAction
+  | FinalQuestionAction;
 
 export type SetProfileAction = {
   action: "setname";
@@ -34,4 +35,10 @@ export type UserAction = {
 export type ChangeColorAction = {
   action: "color";
   number: number;
+};
+
+export type FinalQuestionAction = {
+  action: "final";
+  id?: string;
+  message: string; // two-way
 };

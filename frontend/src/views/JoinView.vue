@@ -15,6 +15,16 @@ const color: Ref<NameColor> = computed(() => COLORS[colorNumber.value]);
 const serverAvailable = ref(false); // websocket things
 const pressAllowed = ref(false); // if server says go
 
+const inputText = ref("400");
+
+const finalMode = ref(0);
+/*
+ * Final documentation
+ * 0: disabled
+ * 1: bets
+ * 2: questions
+ */
+
 const buttonDisabled = computed(
   () => !(serverAvailable.value && pressAllowed.value)
 );
@@ -26,6 +36,14 @@ const displayName = computed(() =>
 );
 
 const push = () => {
+  if (finalMode.value > 0) {
+    if (finalMode.value === 1 && isNaN(parseInt(inputText.value))) {
+      return;
+    }
+    socket.send(JSON.stringify({ action: "final", message: inputText.value }));
+    return;
+  }
+
   if (!pressAllowed.value) return;
   socket.send(JSON.stringify({ action: "pressed" }));
   pressAllowed.value = false;
@@ -51,6 +69,10 @@ socket.onmessage = (msg) => {
       if (data.number >= 0 && data.number < COLORS.length)
         colorNumber.value = data.number;
       break;
+    case "final":
+      finalMode.value++;
+      pressAllowed.value = true;
+      break;
     case undefined:
     case null:
     default:
@@ -68,9 +90,15 @@ socket.onmessage = (msg) => {
 <template>
   <div class="container">
     <div class="button-room general bg">
+      <input type="text" v-model.trim.lazy="inputText" v-if="finalMode > 0" />
       <div
         id="big-button"
-        :class="['bg', 'button-room', color, { disabled: buttonDisabled }]"
+        :class="[
+          'bg',
+          'button-room',
+          color,
+          { disabled: buttonDisabled, final: finalMode > 0 },
+        ]"
         @click="push"
         @click.right.prevent="push"
       >
@@ -124,8 +152,14 @@ socket.onmessage = (msg) => {
   box-shadow: 0.2rem 0.2rem 0.2rem 0.2rem lightgray;
 }
 
+#big-button.final {
+  height: 20%;
+}
+
 .button-room {
   display: flex;
+  flex-direction: column;
+  gap: 5%;
   justify-content: center;
   align-items: center;
   height: 100%;
@@ -152,5 +186,18 @@ footer {
 footer > span {
   display: flex;
   gap: 0.5rem;
+}
+
+input[type="text"] {
+  height: 5rem;
+  font-size: 3rem;
+  padding: 1rem;
+  width: 50%;
+  border-radius: 0.5rem;
+  outline: none;
+}
+
+* {
+  transition: all 0.25s ease;
 }
 </style>

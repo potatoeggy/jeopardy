@@ -1,3 +1,5 @@
+import type { FinalQuestion } from "../types";
+
 const games = [
   [
     {
@@ -107,4 +109,11 @@ const games = [
     },
   ],
 ];
+
+export const finalQuestion: FinalQuestion = {
+  question: "Five",
+  answer: "What is 2 + 2?",
+  category: "Computer Club",
+};
+
 export default games;

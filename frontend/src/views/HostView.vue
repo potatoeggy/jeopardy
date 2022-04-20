@@ -5,6 +5,7 @@ import IconVolumeOff from "../components/icons/IconVolumeOff.vue";
 import IconVolumeUp from "../components/icons/IconVolumeUp.vue";
 import JeopardyGame from "../components/JeopardyGame.vue";
 import { useCounterStore } from "@/stores/counter";
+import { finalQuestion } from "@/data/games";
 
 const COLOR_MAP: NameColor[] = ["red", "blue", "yellow", "green"];
 const API_ENDPOINT = "ws://localhost:8080/host";
@@ -44,6 +45,17 @@ const animationOn = ref(true);
 const hostAlreadyTaken = ref(false);
 const showGame = ref(false);
 const finalMode = ref(false);
+const finalIndex = ref(0);
+const finalAnswers: Ref<string[]> = ref([]);
+const finalBets: Ref<string[]> = ref([]);
+const finalStep = ref(0);
+/*
+ * Final documentation
+ * 0: place bets
+ * 1: question & submit answer
+ * 2: show player answers
+ * 3: show actual answer
+ */
 const currentUserIndex = ref(0);
 const buttonCooldown = ref(false); // ignore all button presses
 
@@ -83,6 +95,10 @@ const sendReady = () => {
   socket.send(JSON.stringify({ action: "ready" }));
 };
 
+const sendFinal = () => {
+  socket.send(JSON.stringify({ action: "final" }));
+};
+
 const sendReadySpecial = () => {
   activeIndex.value = useCounterStore().beepUsers;
   setTimeout(() => (activeIndex.value = []), 5000);
@@ -95,6 +111,9 @@ const sendReadySpecial = () => {
 };
 
 const startGame = () => {
+  if (finalMode.value) {
+    finalMode.value = false;
+  }
   showGame.value = !showGame.value;
   audioRefs.value[currentAudioRef.value].pause();
 };
@@ -104,10 +123,37 @@ const toggleFinal = () => {
     showGame.value = false;
   }
   finalMode.value = !finalMode.value;
-  waiting.value = !finalMode.value;
+
+  if (finalMode.value) {
+    sendFinal();
+  }
+  waiting.value = true;
 };
 
 const colorBar: Ref<NameColor | null> = ref(null);
+
+const progressFinal = () => {
+  const jeopardyMusic = audioRefs.value[1];
+  if (!finalMode.value) {
+    return;
+  }
+
+  if (finalStep.value === 2) {
+    finalIndex.value++;
+    if (finalIndex.value < players.value.length) {
+      return;
+    }
+  }
+
+  finalStep.value++;
+
+  if (finalStep.value === 1) {
+    sendFinal();
+    setTimeout(() => jeopardyMusic.play(), 5000);
+  } else {
+    jeopardyMusic.pause();
+  }
+};
 
 setInterval(() => animationIndex.value++, 1000);
 
@@ -156,6 +202,13 @@ socket.onmessage = (msg) => {
         }, 4000);
       }
       break;
+    case "final":
+      if (data.message && data.id && finalStep.value <= 1) {
+        const index = players.value.findIndex((u) => u.id === data.id);
+        const finalArray = finalStep.value === 0 ? finalBets : finalAnswers;
+        finalArray.value[index] = data.message;
+      }
+      break;
     case undefined:
     case null:
     default:
@@ -196,6 +249,13 @@ socket.onmessage = (msg) => {
         @animationend="colorBar = null"
       >
         <p class="final-label" v-if="finalMode">Final Jeopardy</p>
+        <p class="final-question" v-if="finalMode">
+          <span v-if="finalStep === 0">
+            Category: {{ finalQuestion.category }} — Place your bets!
+          </span>
+          <span v-else-if="finalStep === 1">{{ finalQuestion.question }}</span>
+          <span v-else-if="finalStep === 3"></span>
+        </p>
         <transition-group name="list" tag="">
           <div
             v-for="(user, index) in players"
@@ -203,7 +263,11 @@ socket.onmessage = (msg) => {
             :class="[
               'list',
               {
-                enabled: !waiting || activeIndex.includes(index),
+                enabled:
+                  !waiting ||
+                  activeIndex.includes(index) ||
+                  (finalMode && finalStep === 0 && finalBets[index]) ||
+                  (finalMode && finalStep >= 1 && finalAnswers[index]),
                 'active-index': activeIndex.includes(index) && !animationOn,
                 'not-active-index':
                   !activeIndex.includes(index) && !animationOn,
@@ -225,8 +289,17 @@ socket.onmessage = (msg) => {
             >
               <p>{{ user.name }}</p>
             </div>
+
             <p class="point-text">
               {{ user.points }}
+            </p>
+            <p
+              class="point-text long-point-text"
+              v-if="finalMode && index <= finalIndex && finalStep >= 2"
+            >
+              Bet: {{ finalBets[index] }}
+              <br />
+              {{ finalAnswers[index] }}
             </p>
           </div>
           <div
@@ -253,7 +326,7 @@ socket.onmessage = (msg) => {
         <icon-volume-off v-else @click="toggleAudio" />
         <a @click="sendReady">Ready</a> / <a @click="startGame">Toggle</a> /
         <a @click="toggleFinal">Final</a> /
-        <a>Steal</a>
+        <a @click="progressFinal">Progress</a>
       </div>
       <p>{{ players.length }} playing</p>
     </footer>
@@ -410,9 +483,20 @@ footer {
   opacity: 1;
 }
 
+.long-point-text {
+  font-size: 2vw;
+  max-width: 50%;
+  margin-bottom: -7%;
+}
+
 .point-text:hover {
   cursor: pointer;
   transform: scale(1.2);
+}
+
+.long-point-text:hover {
+  transform: none;
+  cursor: default;
 }
 
 .no-one-here {
@@ -424,6 +508,7 @@ footer {
 .list {
   display: flex;
   flex-direction: column;
+  align-items: center;
 }
 
 .list-move,
@@ -484,6 +569,21 @@ a {
 .final-label {
   position: absolute;
   z-index: 10;
-  left: 50%;
+  left: 0;
+  top: 0;
+  font-size: 5vmin;
+  transform: translate(calc(50vw - 50%), 50%);
+  transition: all 0.5s ease;
+  color: white;
+  background: #ff2578;
+  padding: 0.5rem;
+  border-radius: 0.5rem;
+}
+
+.final-question {
+  position: absolute;
+  bottom: 0;
+  transform: translateY(-10vh);
+  font-size: 5vmin;
 }
 </style>

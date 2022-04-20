@@ -25,3 +25,9 @@ export type Column = {
 };
 
 export type Board = Column[];
+
+export type FinalQuestion = {
+  question: string;
+  answer: string;
+  category: string;
+};

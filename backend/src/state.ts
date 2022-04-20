@@ -56,6 +56,11 @@ export class Game {
               u.send(data);
             }
             break;
+          case "final":
+            for (const u of this.#players) {
+              u.send(data);
+            }
+            break;
           case undefined:
           case null:
             return this.host.error("MissingAction");
@@ -106,6 +111,9 @@ export class Game {
             }
             break;
           case "pressed":
+            this.host.send({ ...data, id: user.id });
+            break;
+          case "final":
             this.host.send({ ...data, id: user.id });
             break;
           case undefined:
