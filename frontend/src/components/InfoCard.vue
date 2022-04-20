@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { useCounterStore } from "@/stores/counter";
-import { computed, ref, watch } from "vue";
+import { computed, ref, watch, type Ref } from "vue";
 import type { HostUser, Question } from "../types";
 
 const props = defineProps<{
@@ -32,6 +32,8 @@ const stealAllowed = ref(false);
 const timerNum = ref(20);
 const timerId = ref(0);
 
+const bgm: Ref<HTMLAudioElement | null> = ref(null);
+
 const store = useCounterStore();
 
 const requestBuzzer = (users: number[]) => {
@@ -52,11 +54,20 @@ const clickStart = () => {
 
   if (showQuestion.value) {
     setTimeout(() => {
+      // kahoot music is audioref 3-5
       timerNum.value = 20;
+      bgm.value = document.getElementById(
+        `audio-${((Math.random() * 3) | 0) + 3}`
+      ) as HTMLAudioElement;
+      bgm.value?.play();
       requestBuzzer([props.currentUserIndex]);
       timerId.value = setInterval(() => {
         timerNum.value--;
         if (timerNum.value <= 0) {
+          const gong = document.getElementById(
+            `audio-${6}`
+          ) as HTMLAudioElement;
+          gong.play();
           requestBuzzer(
             (() => {
               const a: number[] = [];
@@ -90,6 +101,7 @@ const clickAnswer = () => {
 
 watch(store.$state, (first, second) => {
   if (showQuestion.value && second.buttonPressed) {
+    bgm.value?.pause();
     clearInterval(timerId.value);
   }
 });

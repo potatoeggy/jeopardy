@@ -12,6 +12,10 @@ const AUDIO_FILES: { path: string; loop?: boolean }[] = [
   { path: "kahoot-lobby.mp3", loop: true },
   { path: "jeopardy-think.mp3" },
   { path: "among-us-buzzer.mp3" },
+  { path: "battle-1.mp3" },
+  { path: "battle-2.mp3" },
+  { path: "battle-3.mp3" },
+  { path: "battle-end.mp3" },
 ];
 const socket = new WebSocket(API_ENDPOINT);
 
@@ -54,7 +58,7 @@ const toggleAudio = () => {
   }
   if (audioOn.value) {
     audioRefs.value[currentAudioRef.value].pause();
-  } else {
+  } else if (!showGame.value) {
     audioRefs.value[currentAudioRef.value].play();
   }
   audioOn.value = !audioOn.value;
@@ -92,6 +96,7 @@ const sendReadySpecial = () => {
 
 const startGame = () => {
   showGame.value = !showGame.value;
+  audioRefs.value[currentAudioRef.value].pause();
 };
 
 const toggleFinal = () => {
@@ -164,6 +169,7 @@ socket.onmessage = (msg) => {
     v-for="(audio, index) in AUDIO_FILES"
     :key="index"
     ref="audioRefs"
+    :id="`audio-${index}`"
     :loop="audio.loop"
     preload="auto"
   >
