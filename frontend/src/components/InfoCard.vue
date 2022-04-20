@@ -11,7 +11,7 @@ const props = defineProps<{
   currentUserIndex: number;
 }>();
 
-const emit = defineEmits(["completed", "exit", "request-buzzer"]);
+const emit = defineEmits(["completed", "exit", "request-buzzer", "next-user"]);
 
 // hardcoding let's go
 const offsetLeft = computed(() => {
@@ -49,6 +49,14 @@ const clickStart = () => {
 
   if (!showQuestion.value) {
     clearInterval(timerId.value);
+    // kill music
+    for (let i = 3; i <= 5; i++) {
+      const tempAudio = document.getElementById(
+        `audio-${i}`
+      ) as HTMLAudioElement;
+      tempAudio.pause();
+      tempAudio.currentTime = 0;
+    }
     emit("exit"); // TODO: check wincon
   }
 
@@ -59,6 +67,7 @@ const clickStart = () => {
       bgm.value = document.getElementById(
         `audio-${((Math.random() * 3) | 0) + 3}`
       ) as HTMLAudioElement;
+      bgm.value.currentTime = 0;
       bgm.value?.play();
       requestBuzzer([props.currentUserIndex]);
       timerId.value = setInterval(() => {
@@ -97,6 +106,7 @@ const clickAnswer = () => {
   timerNum.value = 0;
   showAnswer.value = !showAnswer.value;
   emit("completed");
+  emit("next-user");
 };
 
 watch(store.$state, (first, second) => {

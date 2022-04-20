@@ -6,53 +6,119 @@ const games = [
       heading: "Hardware",
       questions: [
         [
-          "A world full of people that is on fire but unfortunately still alive",
-          "what is a 2",
+          "The component that powers a desktop computer.",
+          "What is a power supply?",
         ],
-        ["2", "what is a 2"],
-        ["2", "what is a 2"],
-        ["2", "what is a 2"],
-        ["2", "what is a 2"],
+        [
+          "An element used in transistors because of its semiconductive properties.",
+          "What is silicon?",
+        ],
+        [
+          "A type of switch that completely phased out the use of vacuum tubes.",
+          "What is a transistor?",
+        ],
+        [
+          "A connector that rigorously inserts into its female counterpart.",
+          "What is a male connector?",
+        ],
+        [
+          "The full name of the motherboard interface used to connect GPUs to a desktop PC.",
+          "What is Peripheral Component Interconnect Express?",
+        ],
       ],
     },
     {
       heading: "My Computer",
       questions: [
-        ["2", "what is a 2"],
-        ["2", "what is a 2"],
-        ["2", "what is a 2"],
-        ["2", "what is a 2"],
-        ["2", "what is a 2"],
+        [
+          "Command-C and Command-V",
+          "What are the keyboard shortcuts to copy and paste on macOS?",
+        ],
+        [
+          "A technology that can wirelessly transfer files exclusively between Apple devices.",
+          "What is AirDrop?",
+        ],
+        [
+          "A reversible connector used in phones and computers that can carry power.",
+          "What is USB-C?",
+        ],
+        [
+          "Ctrl+Shift+Esc",
+          "What is the keyboard shortcut to open Windows Task Manager?",
+        ],
+        [
+          "The user-specific folder for program data after Windows Vista.",
+          "What is AppData?",
+        ],
       ],
     },
     {
-      heading: "Systems around the world",
+      heading: "History",
       questions: [
-        ["2", "what is a 2"],
-        ["2", "what is a 2"],
-        ["2", "what is a 2"],
-        ["2", "what is a 2"],
-        ["2", "what is a 2"],
+        [
+          "The woman often credited as the first computer programmer.",
+          "Who was Ada Lovelace?",
+        ],
+        [
+          "The best-selling video game home console, released in 2000.",
+          "What is the PlayStation 2?",
+        ],
+        [
+          "The creator of the UNIX operating system and the C programming language.",
+          "Who was Dennis Ritchie?",
+        ],
+        ["The first Intel CPU.", "What was the Intel 4004?"],
+        ["The first programmable electronic computer's name", "what is a 2"],
       ],
     },
     {
-      heading: "babies",
+      heading: "Programming",
       questions: [
-        ["2", "what is a 2"],
-        ["2", "what is a 2"],
-        ["2", "what is a 2"],
-        ["2", "what is a 2"],
-        ["2", "what is a 2"],
+        [
+          "The keyword used in nearly all programming languages to represent a conditional.",
+          "What is if?",
+        ],
+        [
+          "A programming language known for requiring indents to represent code blocks.",
+          "What is Python?",
+        ],
+        [
+          "A tool used to translate source code from a higher to a lower level.",
+          "What is a compiler?",
+        ],
+        [
+          "A function that might not have a name or identifier.",
+          "What is an anonymous/lambda function?",
+        ],
+        [
+          "A method of boolean comparison that may not evaluate the second argument.",
+          "What is short-circuit evaluation?",
+        ],
       ],
     },
     {
-      heading: "joey",
+      heading: "Worldwide Systems",
       questions: [
-        ["2", "what is a 2"],
-        ["2", "what is a 2"],
-        ["2", "what is a 2"],
-        ["2", "what is a 2"],
-        ["2", "what is a 2"],
+        [
+          "A machine used in WWII by the Germans to encode secret messages.",
+          "What was Enigma?",
+        ],
+        [
+          "The Soviet spacecraft series used to carry humans into space.",
+          "What is Soyuz?",
+        ],
+        [
+          "The world's largest particle accelerator, designed to study elementary particles.",
+          "What is the Large Hadron Collider?",
+        ],
+        [
+          "The dominant software platform for computer communication over a network.",
+          "What is the World Wide Web?",
+        ],
+        [
+          "The Chinese satellite navigation system comparable to GPS.",
+          "What is BeiDou?",
+        ],
       ],
     },
   ],
@@ -111,8 +177,9 @@ const games = [
 ];
 
 export const finalQuestion: FinalQuestion = {
-  question: "Five",
-  answer: "What is 2 + 2?",
+  question:
+    "The distinctive colour used in computer club materials, aside from black. (literally our brand)",
+  answer: "What is magenta?",
   category: "Computer Club",
 };
 

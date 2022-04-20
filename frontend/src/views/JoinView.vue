@@ -16,6 +16,7 @@ const serverAvailable = ref(false); // websocket things
 const pressAllowed = ref(false); // if server says go
 
 const inputText = ref("400");
+const timeout: Ref<number> = ref(0);
 
 const finalMode = ref(0);
 /*
@@ -54,11 +55,13 @@ socket.onopen = () => (serverAvailable.value = true);
 socket.onmessage = (msg) => {
   const data: Action = JSON.parse(msg.data);
   console.log("Server:", data);
+
   switch (data?.action) {
     case "ready":
+      clearTimeout(timeout.value);
       pressAllowed.value = true;
       // if it isn't pressed, disable after 20 s
-      setTimeout(() => (pressAllowed.value = false), 20000);
+      timeout.value = setTimeout(() => (pressAllowed.value = false), 20000);
       break;
     case "error":
       if (data.error === "NoHostAvailable") {
@@ -70,6 +73,7 @@ socket.onmessage = (msg) => {
         colorNumber.value = data.number;
       break;
     case "final":
+      clearTimeout(timeout.value);
       finalMode.value++;
       pressAllowed.value = true;
       break;

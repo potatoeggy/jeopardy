@@ -233,8 +233,9 @@ socket.onmessage = (msg) => {
       <jeopardy-game
         :game-number="0"
         :users="players"
-        :current-user-index="currentUserIndex"
+        :current-user-index="currentUserIndex % players.length"
         @request-buzzer="sendReadySpecial"
+        @next-user="currentUserIndex++"
       />
 
       <div
@@ -254,7 +255,7 @@ socket.onmessage = (msg) => {
             Category: {{ finalQuestion.category }} — Place your bets!
           </span>
           <span v-else-if="finalStep === 1">{{ finalQuestion.question }}</span>
-          <span v-else-if="finalStep === 3"></span>
+          <span v-else-if="finalStep === 3">{{ finalQuestion.answer }}</span>
         </p>
         <transition-group name="list" tag="">
           <div
@@ -582,6 +583,9 @@ a {
 
 .final-question {
   position: absolute;
+  text-align: center;
+  margin-left: 10%;
+  margin-right: 10%;
   bottom: 0;
   transform: translateY(-10vh);
   font-size: 5vmin;

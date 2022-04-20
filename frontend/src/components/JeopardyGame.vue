@@ -10,7 +10,7 @@ const props = defineProps<{
   currentUserIndex: number; // we could put this into store
 }>();
 
-const emit = defineEmits(["request-buzzer"]);
+const emit = defineEmits(["request-buzzer", "next-user"]);
 
 const games: Ref<Board[]> = ref(
   gameJson.map((game) =>
@@ -53,6 +53,7 @@ const turn = ref(0);
           :current-user-index="currentUserIndex"
           @completed="question.completed = !question.completed"
           @request-buzzer="emit('request-buzzer')"
+          @next-user="emit('next-user')"
         />
       </template>
     </div>
