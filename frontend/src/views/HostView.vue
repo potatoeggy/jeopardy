@@ -102,6 +102,8 @@ const toggleFinal = () => {
   waiting.value = !finalMode.value;
 };
 
+const colorBar: Ref<NameColor | null> = ref(null);
+
 setInterval(() => animationIndex.value++, 1000);
 
 socket.onmessage = (msg) => {
@@ -135,8 +137,9 @@ socket.onmessage = (msg) => {
       }
       break;
     case "pressed":
-      if (data.id && !waiting.value) {
+      if (data.id && !buttonCooldown.value) {
         activeIndex.value = [players.value.findIndex((u) => u.id === data.id)];
+        colorBar.value = COLOR_MAP[activeIndex.value[0]] || null;
         audioRefs.value[2].play();
         waiting.value = true;
         buttonCooldown.value = true;
@@ -175,7 +178,17 @@ socket.onmessage = (msg) => {
         @request-buzzer="sendReadySpecial"
       />
 
-      <div :class="['button-room', 'general', 'bg', { overlay: showGame }]">
+      <div
+        :class="[
+          'button-room',
+          'general',
+          'bg',
+          colorBar,
+          colorBar ? 'color-bar' : null,
+          { overlay: showGame },
+        ]"
+        @animationend="colorBar = null"
+      >
         <p class="final-label" v-if="finalMode">Final Jeopardy</p>
         <transition-group name="list" tag="">
           <div
@@ -243,6 +256,24 @@ socket.onmessage = (msg) => {
 
 <style scoped>
 @import "../assets/colors.css";
+
+.color-bar {
+  animation-name: color;
+  animation-duration: 3s;
+}
+
+@keyframes color {
+  0% {
+    background: gray;
+  }
+  25%,
+  75% {
+    background: var(--bg);
+  }
+  100% {
+    background: gray;
+  }
+}
 
 .general {
   position: absolute;
