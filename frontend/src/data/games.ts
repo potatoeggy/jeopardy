@@ -64,11 +64,14 @@ const games = [
           "What is the PlayStation 2?",
         ],
         [
-          "The creator of the UNIX operating system and the C programming language.",
-          "Who was Dennis Ritchie?",
+          "A man who devised a famous test as to whether machines could think.",
+          "Who was Alan Turing?",
         ],
-        ["The first Intel CPU.", "What was the Intel 4004?"],
-        ["The first programmable electronic computer's name", "what is a 2"],
+        ["The earliest known tool for computation.", "What is the abacus?"],
+        [
+          "The first Intel microprocessor, released in 1971.",
+          "What was the Intel 4004?",
+        ],
       ],
     },
     {
