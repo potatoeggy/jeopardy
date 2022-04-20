@@ -99,7 +99,7 @@ watch(store.$state, (first, second) => {
   <div>
     <div
       :class="['card', { completed, fullscreen: showQuestion }]"
-      :style="{ '--offset-left': offsetLeft, '--offset-bottom': offsetBottom }"
+      :style="{ ['--offset-left' as any]: offsetLeft, ['--offset-bottom' as any]: offsetBottom }"
       @click="clickStart"
       @click.right.prevent="clickAnswer"
     >
