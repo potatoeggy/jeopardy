@@ -221,7 +221,7 @@ watch(store.$state, (first, second) => {
 }
 
 .question {
-  font-size: 5vh;
+  font-size: 4vmin;
   margin-left: 20%;
   margin-right: 20%;
   margin-bottom: 5%;
