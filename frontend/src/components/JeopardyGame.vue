@@ -12,24 +12,30 @@ const props = defineProps<{
 
 const emit = defineEmits(["request-buzzer", "next-user"]);
 
-const games: Ref<Board[]> = ref(
-  gameJson.map((game) =>
-    game.map((category) => {
-      return {
-        heading: category.heading,
-        questions: category.questions.map((question, index) => {
-          return {
-            question: question[0],
-            answer: question[1],
-            points: (index + 1) * 100,
-            completed: false,
-          };
-        }),
-      };
-    })
-  )
+const gameData: Ref<Board[]> = ref(
+  gameJson.map((game) => {
+    return {
+      title: game.title,
+      board: game.board.map((category) => {
+        return {
+          heading: category.heading,
+          questions: category.questions.map((question, index) => {
+            return {
+              question: question[0],
+              answer: question[1],
+              points: (index + 1) * 100,
+              completed: false,
+            };
+          }),
+        };
+      }),
+    };
+  })
 );
 
+const games = ref(gameData.value.map((e) => e.board));
+
+const currentGameMetadata = computed(() => gameData.value[props.gameNumber]);
 const currentGame = computed(() => games.value[props.gameNumber]);
 
 // game state

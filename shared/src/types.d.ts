@@ -24,7 +24,7 @@ export type Column = {
   questions: Question[];
 };
 
-export type Board = Column[];
+export type Board = { title: string; board: Column[] };
 
 export type FinalQuestion = {
   question: string;
