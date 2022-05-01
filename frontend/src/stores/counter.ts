@@ -8,6 +8,7 @@ export const useCounterStore = defineStore({
     buttonPressed: false,
     activeQuestion: null as Question | null,
     beepUsers: [] as number[],
+    gameTitle: "Unknown game",
   }),
   actions: {
     toggleButtonPressed() {
@@ -18,6 +19,9 @@ export const useCounterStore = defineStore({
     },
     setUsers(users: number[]) {
       this.beepUsers = users;
+    },
+    setCurrentGame(gameTitle: string) {
+      this.gameTitle = gameTitle;
     },
   },
 });

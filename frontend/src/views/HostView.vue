@@ -40,6 +40,9 @@ const players = computed(() => {
 const waiting = ref(true);
 const activeIndex: Ref<number[]> = ref([]);
 
+const store = useCounterStore();
+const gameNumber = ref(0);
+
 const animationIndex = ref(0);
 const animationOn = ref(true);
 const hostAlreadyTaken = ref(false);
@@ -100,12 +103,12 @@ const sendFinal = () => {
 };
 
 const sendReadySpecial = () => {
-  activeIndex.value = useCounterStore().beepUsers;
+  activeIndex.value = store.beepUsers;
   setTimeout(() => (activeIndex.value = []), 5000);
   socket.send(
     JSON.stringify({
       action: "ready",
-      ids: useCounterStore().beepUsers.map((i) => players.value[i].id),
+      ids: store.beepUsers.map((i) => players.value[i].id),
     })
   );
 };
@@ -194,11 +197,11 @@ socket.onmessage = (msg) => {
         audioRefs.value[2].play();
         waiting.value = true;
         buttonCooldown.value = true;
-        useCounterStore().toggleButtonPressed();
+        store.toggleButtonPressed();
         setTimeout(() => {
           buttonCooldown.value = false;
           activeIndex.value = [];
-          useCounterStore().toggleButtonPressed();
+          store.toggleButtonPressed();
         }, 4000);
       }
       break;
@@ -231,7 +234,7 @@ socket.onmessage = (msg) => {
   <div class="container" @keyup.enter.capture="sendReady">
     <div class="game-container">
       <jeopardy-game
-        :game-number="0"
+        :game-number="gameNumber"
         :users="players"
         :current-user-index="currentUserIndex % players.length"
         @request-buzzer="sendReadySpecial"
@@ -329,7 +332,7 @@ socket.onmessage = (msg) => {
         <a @click="toggleFinal">Final</a> /
         <a @click="progressFinal">Progress</a>
       </div>
-      <p>{{ players.length }} playing</p>
+      <a @click="gameNumber++">{{ store.gameTitle }}</a>
     </footer>
   </div>
 </template>

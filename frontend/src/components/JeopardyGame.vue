@@ -1,5 +1,6 @@
 <script setup lang="ts">
-import { computed, ref, type Ref } from "vue";
+import { useCounterStore } from "@/stores/counter";
+import { computed, ref, watch, type Ref } from "vue";
 import gameJson from "../data/games";
 import type { Board, HostUser, Question } from "../types";
 import InfoCard from "./InfoCard.vue";
@@ -35,11 +36,24 @@ const gameData: Ref<Board[]> = ref(
 
 const games = ref(gameData.value.map((e) => e.board));
 
-const currentGameMetadata = computed(() => gameData.value[props.gameNumber]);
-const currentGame = computed(() => games.value[props.gameNumber]);
+const gameNumberSanitised = computed(
+  () => props.gameNumber % games.value.length
+);
+const currentGameMetadata = computed(
+  () => gameData.value[gameNumberSanitised.value]
+);
+useCounterStore().setCurrentGame(currentGameMetadata.value.title);
+const currentGame = computed(() => games.value[gameNumberSanitised.value]);
 
 // game state
 const turn = ref(0);
+
+watch(currentGameMetadata, (value) => {
+  // don't you love it when you rush things and
+  // maintain it later but then your terrible
+  // rushing screws you over?
+  useCounterStore().setCurrentGame(value.title);
+});
 
 // generate proper display board from games
 </script>
