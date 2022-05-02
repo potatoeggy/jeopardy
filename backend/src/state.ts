@@ -77,6 +77,8 @@ export class Game {
       for (const u of this.#players) {
         u.socket.close();
       }
+
+      console.log("Host left, closing...");
       this.hostAlive = false;
     });
     this.hostAlive = true;
@@ -100,7 +102,7 @@ export class Game {
   addPlayer(user: User) {
     this.#players.push(user);
     user.socket.on("message", (msg) => {
-      console.log("Got", msg);
+      console.log("Got", msg.toString());
       try {
         const data: Action = JSON.parse(msg.toString());
 
