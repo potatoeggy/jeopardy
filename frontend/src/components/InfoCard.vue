@@ -93,7 +93,7 @@ const clickStart = () => {
           clearTimeout(timerId.value);
         }
       }, 1000);
-    }, 4000);
+    }, 6000);
   }
   showAnswer.value = false;
 };
