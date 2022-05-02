@@ -1,5 +1,19 @@
 <script setup lang="ts">
 import { RouterView } from "vue-router";
+
+// disable hardware media keys
+// eslint-disable-next-line no-undef
+const mediaKeys: MediaSessionAction[] = [
+  "play",
+  "pause",
+  "seekbackward",
+  "seekforward",
+  "previoustrack",
+  "nexttrack",
+];
+
+for (const k of mediaKeys)
+  navigator.mediaSession.setActionHandler(k, () => null);
 </script>
 
 <template>
