@@ -21,24 +21,30 @@ server.on("connection", (socket, req) => {
         return;
       }
       game.addPlayer(new User(socket));
+      console.log("New player joined");
     } else {
-      return socket.send(
+      console.log("ERROR joining guild: NoHostAvailable");
+      socket.send(
         JSON.stringify({
           action: "error",
           error: "NoHostAvailable",
         })
       );
+      return socket.close();
     }
   } else if (req.url?.endsWith("/host")) {
     if (game?.hostAlive) {
-      return socket.send(
+      console.log("ERROR creating guild: HostAlreadyTaken");
+      socket.send(
         JSON.stringify({
           action: "error",
           error: "HostAlreadyTaken",
         })
       );
+      return socket.close();
     } else {
       game = new Game(new User(socket));
+      console.log("New game created!");
     }
   }
 });

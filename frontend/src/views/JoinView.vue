@@ -7,7 +7,7 @@ import IconCloudOn from "../components/icons/IconCloudOn.vue";
 
 const API_ENDPOINT = "ws://localhost:8080/join";
 const COLORS: NameColor[] = ["red", "blue", "yellow", "green"];
-const socket = new WebSocket(API_ENDPOINT);
+let socket = new WebSocket(API_ENDPOINT);
 
 const name = ref("");
 const colorNumber: Ref<number> = ref(0);
@@ -50,38 +50,49 @@ const push = () => {
   pressAllowed.value = false;
 };
 
-socket.onopen = () => (serverAvailable.value = true);
+function createSocket(newSocket: WebSocket) {
+  newSocket.onopen = () => (serverAvailable.value = true);
+  newSocket.onclose = () => {
+    serverAvailable.value = false;
+    setTimeout(() => {
+      socket = new WebSocket(API_ENDPOINT);
+      createSocket(socket);
+    }, 1000);
+  };
 
-socket.onmessage = (msg) => {
-  const data: Action = JSON.parse(msg.data);
-  console.log("Server:", data);
+  newSocket.onmessage = (msg) => {
+    const data: Action = JSON.parse(msg.data);
+    console.log("Server:", data);
 
-  switch (data?.action) {
-    case "ready":
-      clearTimeout(timeout.value);
-      pressAllowed.value = true;
-      // if it isn't pressed, disable after 20 s
-      timeout.value = setTimeout(() => (pressAllowed.value = false), 20000);
-      break;
-    case "error":
-      if (data.error === "NoHostAvailable") {
-        serverAvailable.value = false;
-      }
-      break;
-    case "color":
-      if (data.number >= 0 && data.number < COLORS.length)
-        colorNumber.value = data.number;
-      break;
-    case "final":
-      clearTimeout(timeout.value);
-      finalMode.value++;
-      pressAllowed.value = true;
-      break;
-    case undefined:
-    case null:
-    default:
-  }
-};
+    switch (data?.action) {
+      case "ready":
+        clearTimeout(timeout.value);
+        pressAllowed.value = true;
+        // if it isn't pressed, disable after 20 s
+        timeout.value = setTimeout(() => (pressAllowed.value = false), 20000);
+        break;
+      case "error":
+        if (data.error === "NoHostAvailable") {
+          serverAvailable.value = false;
+        }
+        break;
+      case "color":
+        if (data.number >= 0 && data.number < COLORS.length)
+          colorNumber.value = data.number;
+        break;
+      case "final":
+        clearTimeout(timeout.value);
+        finalMode.value++;
+        pressAllowed.value = true;
+        break;
+      case undefined:
+      case null:
+      default:
+    }
+  };
+}
+
+createSocket(socket);
 
 // TODO: small idle waiting animation like a bouncing hourglass
 // TODO: allow changing names

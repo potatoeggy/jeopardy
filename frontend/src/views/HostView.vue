@@ -6,6 +6,8 @@ import IconVolumeUp from "../components/icons/IconVolumeUp.vue";
 import JeopardyGame from "../components/JeopardyGame.vue";
 import { useCounterStore } from "@/stores/counter";
 import { finalQuestion } from "@/data/games";
+import IconCloudOn from "../components/icons/IconCloudOn.vue";
+import IconCloudOff from "../components/icons/IconCloudOff.vue";
 
 const COLOR_MAP: NameColor[] = ["red", "blue", "yellow", "green"];
 const API_ENDPOINT = "ws://localhost:8080/host";
@@ -19,6 +21,7 @@ const AUDIO_FILES: { path: string; loop?: boolean }[] = [
   { path: "battle-end.mp3" },
 ];
 const socket = new WebSocket(API_ENDPOINT);
+const serverAvailable = ref(false);
 
 const userData: Ref<SerialisedUser[]> = ref([]);
 const players = computed(() => {
@@ -160,6 +163,8 @@ const progressFinal = () => {
 
 setInterval(() => animationIndex.value++, 1000);
 
+socket.onopen = () => (serverAvailable.value = true);
+socket.onclose = () => (serverAvailable.value = false);
 socket.onmessage = (msg) => {
   const data: Action = JSON.parse(msg.data);
   console.log(data);
@@ -313,6 +318,13 @@ socket.onmessage = (msg) => {
             Game in progress...<br />
             Please try again later.
           </div>
+          <div
+            v-else-if="players.length === 0 && !serverAvailable"
+            class="no-one-here"
+          >
+            Something went wrong...<br />
+            Please refresh the page.
+          </div>
           <div v-else-if="players.length === 0" class="no-one-here">
             No one here... <br />
             Join at jeopardy.bayview.club!
@@ -326,6 +338,8 @@ socket.onmessage = (msg) => {
       <input type="text" id="name" />
       -->
       <div class="corner">
+        <icon-cloud-on v-if="serverAvailable" />
+        <icon-cloud-off v-else />
         <icon-volume-up v-if="audioOn" @click="toggleAudio" />
         <icon-volume-off v-else @click="toggleAudio" />
         <a @click="sendReady">Ready</a> / <a @click="startGame">Toggle</a> /
