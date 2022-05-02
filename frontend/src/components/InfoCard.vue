@@ -31,6 +31,7 @@ const stealAllowed = ref(false);
 
 const timerNum = ref(20);
 const timerId = ref(0);
+const delayTimeoutId = ref(0);
 
 const bgm: Ref<HTMLAudioElement | null> = ref(null);
 
@@ -49,6 +50,7 @@ const clickStart = () => {
 
   if (!showQuestion.value) {
     clearInterval(timerId.value);
+    clearInterval(delayTimeoutId.value);
     // kill music
     for (let i = 3; i <= 5; i++) {
       const tempAudio = document.getElementById(
@@ -61,7 +63,7 @@ const clickStart = () => {
   }
 
   if (showQuestion.value) {
-    setTimeout(() => {
+    delayTimeoutId.value = setTimeout(() => {
       // kahoot music is audioref 3-5
       timerNum.value = 20;
       bgm.value = document.getElementById(
