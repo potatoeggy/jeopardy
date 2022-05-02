@@ -108,12 +108,16 @@ const sendFinal = () => {
 const sendReadySpecial = () => {
   activeIndex.value = store.beepUsers;
   setTimeout(() => (activeIndex.value = []), 5000);
-  socket.send(
-    JSON.stringify({
-      action: "ready",
-      ids: store.beepUsers.map((i) => players.value[i].id),
-    })
-  );
+  try {
+    socket.send(
+      JSON.stringify({
+        action: "ready",
+        ids: store.beepUsers.map((i) => players.value[i].id),
+      })
+    );
+  } catch (err) {
+    // normal if there are no players
+  }
 };
 
 const startGame = () => {
