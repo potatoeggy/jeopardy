@@ -45,6 +45,7 @@ export class Game {
   constructor(host: User) {
     this.host = host;
     this.host.socket.on("message", (msg) => {
+      if (msg.toString() === "ping!") return;
       try {
         const data: Action = JSON.parse(msg.toString());
         switch (data.action) {
@@ -102,6 +103,7 @@ export class Game {
   addPlayer(user: User) {
     this.#players.push(user);
     user.socket.on("message", (msg) => {
+      if (msg.toString() === "ping!") return;
       console.log("Got", msg.toString());
       try {
         const data: Action = JSON.parse(msg.toString());

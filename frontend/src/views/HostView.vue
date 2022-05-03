@@ -167,7 +167,11 @@ const progressFinal = () => {
 
 setInterval(() => animationIndex.value++, 1000);
 
-socket.onopen = () => (serverAvailable.value = true);
+socket.onopen = () => {
+  serverAvailable.value = true;
+  // so cloudflare doesn't disconnect us
+  setInterval(() => socket.send("ping!"), 10000);
+};
 socket.onclose = () => (serverAvailable.value = false);
 socket.onmessage = (msg) => {
   const data: Action = JSON.parse(msg.data);
