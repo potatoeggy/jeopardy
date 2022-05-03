@@ -104,7 +104,17 @@ const clickAnswer = () => {
     return;
   }
 
+  // clear music
   clearInterval(timerId.value);
+  clearInterval(delayTimeoutId.value);
+
+  for (let i = 3; i <= 5; i++) {
+    const tempAudio = document.getElementById(`audio-${i}`) as HTMLAudioElement;
+    tempAudio.pause();
+    tempAudio.currentTime = 0;
+  }
+
+  // clear visuals
   timerNum.value = 0;
   showAnswer.value = !showAnswer.value;
   emit("completed");

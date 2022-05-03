@@ -165,6 +165,10 @@ const progressFinal = () => {
   }
 };
 
+const pushColorBar = () => {
+  colorBar.value = COLOR_MAP[currentUserIndex.value] || null;
+};
+
 setInterval(() => animationIndex.value++, 1000);
 
 socket.onopen = () => {
@@ -252,6 +256,7 @@ socket.onmessage = (msg) => {
         :current-user-index="currentUserIndex % players.length"
         @request-buzzer="sendReadySpecial"
         @next-user="currentUserIndex++"
+        @exit-card="pushColorBar"
       />
 
       <div

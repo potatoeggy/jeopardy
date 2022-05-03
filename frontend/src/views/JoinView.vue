@@ -98,12 +98,7 @@ function createSocket(newSocket: WebSocket) {
 createSocket(socket);
 setInterval(() => socket.send("ping!"), 10000);
 
-// TODO: small idle waiting animation like a bouncing hourglass
 // TODO: allow changing names
-</script>
-
-<script lang="ts">
-// this only runs once
 </script>
 
 <template>
