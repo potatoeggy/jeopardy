@@ -54,7 +54,6 @@ function createSocket(newSocket: WebSocket) {
   newSocket.onopen = () => {
     serverAvailable.value = true;
     // make sure cloudflare doesn't disconnect us
-    setInterval(() => newSocket.send("ping!"), 10000);
   };
   newSocket.onclose = () => {
     serverAvailable.value = false;
@@ -97,6 +96,7 @@ function createSocket(newSocket: WebSocket) {
 }
 
 createSocket(socket);
+setInterval(() => socket.send("ping!"), 10000);
 
 // TODO: small idle waiting animation like a bouncing hourglass
 // TODO: allow changing names
