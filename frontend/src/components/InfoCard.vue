@@ -247,11 +247,11 @@ watch(store.$state, (first, second) => {
 }
 
 .answer {
-  padding-top: 4%;
+  padding-top: 3vh;
   border-top: 0.1rem solid black;
   width: 80%;
   text-align: center;
-  font-size: 7vh;
+  font-size: 6vh;
   transition: font-size 0.25s ease;
 }
 </style>
