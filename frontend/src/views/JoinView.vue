@@ -86,6 +86,10 @@ function createSocket(newSocket: WebSocket) {
       case "final":
         clearTimeout(timeout.value);
         finalMode.value++;
+        if (finalMode.value === 2) {
+          // clear text
+          inputText.value = "What is a potato?";
+        }
         pressAllowed.value = true;
         break;
       case undefined:
