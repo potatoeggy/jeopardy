@@ -166,7 +166,8 @@ const progressFinal = () => {
 };
 
 const pushColorBar = () => {
-  colorBar.value = COLOR_MAP[currentUserIndex.value % COLOR_MAP.length] || null;
+  colorBar.value =
+    COLOR_MAP[currentUserIndex.value % players.value.length] || null;
 };
 
 setInterval(() => animationIndex.value++, 1000);
