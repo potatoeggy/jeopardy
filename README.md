@@ -38,7 +38,7 @@ yarn build
 
 ## Usage
 
-Start the backend WebSocket server in `jeopardy/backend/build`:
+Start the backend WebSocket server (default port: 8080) in `jeopardy/backend/build`:
 
 ```sh
 node index.js
