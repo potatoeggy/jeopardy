@@ -1,7 +1,7 @@
 import { WebSocketServer } from "ws";
 import { Game, User } from "./state";
 
-const MAX_PLAYERS = 4;
+const MAX_PLAYERS = 6;
 
 let game: Game;
 

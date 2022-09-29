@@ -6,7 +6,14 @@ import IconCloudOff from "../components/icons/IconCloudOff.vue";
 import IconCloudOn from "../components/icons/IconCloudOn.vue";
 
 const API_ENDPOINT = "ws://localhost:8080/join";
-const COLORS: NameColor[] = ["red", "blue", "yellow", "green"];
+const COLORS: NameColor[] = [
+  "red",
+  "blue",
+  "yellow",
+  "green",
+  "orange",
+  "purple",
+];
 let socket = new WebSocket(API_ENDPOINT);
 
 const name = ref("");

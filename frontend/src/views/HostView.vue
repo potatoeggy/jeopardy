@@ -9,7 +9,15 @@ import { finalQuestion } from "@/data/games";
 import IconCloudOn from "../components/icons/IconCloudOn.vue";
 import IconCloudOff from "../components/icons/IconCloudOff.vue";
 
-const COLOR_MAP: NameColor[] = ["red", "blue", "yellow", "green"];
+const MAX_PLAYERS = 6;
+const COLOR_MAP: NameColor[] = [
+  "red",
+  "blue",
+  "yellow",
+  "green",
+  "orange",
+  "purple",
+];
 const API_ENDPOINT = "ws://localhost:8080/host";
 const AUDIO_FILES: { path: string; loop?: boolean }[] = [
   { path: "kahoot-lobby.mp3", loop: true },
@@ -185,7 +193,7 @@ socket.onmessage = (msg) => {
     case "setname":
       break;
     case "user":
-      if (data.userIds.length <= 4) {
+      if (data.userIds.length <= MAX_PLAYERS) {
         // remove ones that don't exist
         userData.value = userData.value.filter((u) =>
           data.userIds.includes(u.id)
@@ -414,14 +422,14 @@ socket.onmessage = (msg) => {
   gap: 0.5rem;
 }
 .big-button {
-  --width: 18vw;
+  --width: 15vw;
   width: var(--width);
-  height: var(--width);
+  aspect-ratio: 1/1;
   background: var(--bg);
   color: white;
   text-shadow: rgba(0, 0, 0, 0.25) 0px 0.125rem 0px,
     rgb(0, 0, 0) 0px 0px 0.125rem;
-  font-size: 4vw;
+  font-size: 3.5vw;
   border-radius: 50%;
   transition-duration: 0.2s;
   transition-property: filter;

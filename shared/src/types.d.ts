@@ -1,6 +1,12 @@
 export type * from "./actions";
 
-export type NameColor = "red" | "blue" | "yellow" | "green";
+export type NameColor =
+  | "red"
+  | "blue"
+  | "yellow"
+  | "green"
+  | "orange"
+  | "purple";
 
 export type SerialisedUser = {
   id: string;

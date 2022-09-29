@@ -22,6 +22,16 @@
   --darker: #c48f00;
 }
 
+.orange {
+  --bg: orange;
+  --darker: rgb(226, 150, 7);
+}
+
+.purple {
+  --bg: purple;
+  --darker: rgb(83, 0, 83);
+}
+
 .general {
   --bg-dark: #f2f2f2;
   --bg-color: #46178f;
