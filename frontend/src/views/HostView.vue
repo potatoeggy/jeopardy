@@ -333,24 +333,20 @@ socket.onmessage = (msg) => {
               {{ finalAnswers[index] }}
             </p>
           </div>
-          <div
-            v-if="players.length === 0 && hostAlreadyTaken"
-            class="no-one-here"
-          >
-            Game in progress...<br />
-            Please try again later.
-          </div>
-          <div
-            v-else-if="players.length === 0 && !serverAvailable"
-            class="no-one-here"
-          >
-            Something went wrong...<br />
-            Please refresh the page.
-          </div>
-          <div v-else-if="players.length === 0" class="no-one-here">
-            No one here... <br />
-            Join at jeopardy.bayview.club!
-          </div>
+          <template v-if="players.length === 0 && !showGame">
+            <div v-if="hostAlreadyTaken" class="no-one-here">
+              Game in progress...<br />
+              Please try again later.
+            </div>
+            <div v-else-if="!serverAvailable" class="no-one-here">
+              Something went wrong...<br />
+              Please refresh the page.
+            </div>
+            <div v-else class="no-one-here">
+              No one here... <br />
+              Join at jeopardy.bayview.club!
+            </div>
+          </template>
         </transition-group>
       </div>
     </div>
