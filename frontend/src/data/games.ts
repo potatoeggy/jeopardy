@@ -11,11 +11,12 @@ export type Game = {
   board: Board;
 };
 
-const gameImports = import.meta.globEager("./games/*.ts");
+const gameImports = import.meta.glob("./games/*.ts", {
+  eager: true,
+  import: "default",
+});
 
-const games: Game[] = [
-  ...Object.values(gameImports).map((game) => game.default),
-];
+const games = [...Object.values(gameImports)] as Game[];
 
 export const finalQuestion: FinalQuestion = {
   question:
