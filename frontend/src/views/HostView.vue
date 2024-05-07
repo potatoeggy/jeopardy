@@ -344,7 +344,7 @@ socket.onmessage = (msg) => {
             </div>
             <div v-else class="no-one-here">
               No one here... <br />
-              Join at jeopardy.bayview.club!
+              Join at jeopardy.eggworld.me!
             </div>
           </template>
         </transition-group>

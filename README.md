@@ -2,7 +2,7 @@
 
 A pretty version of Jeopardy made for Bayview's Computer Club.
 
-Demo available at https://jeopardy.bayview.club.
+Demo available at https://jeopardy.eggworld.me.
 
 The code is hackathon quality don't bother reviewing this.
 
@@ -44,9 +44,9 @@ Start the backend WebSocket server (default port: 8080) in `jeopardy/backend/bui
 node index.js
 ```
 
-Similar to Kahoot, the host should visit $DOMAIN/host (e.g., for Bayview students, visit https://jeopardy.bayview.club/host)
+Similar to Kahoot, the host should visit $DOMAIN/host (e.g., for Bayview students, visit https://jeopardy.eggworld.me/host)
 
-All players (up to 4) should join at $DOMAIN (e.g., for Bayview students, visit https://jeopardy.bayview.club)
+All players (up to 4) should join at $DOMAIN (e.g., for Bayview students, visit https://jeopardy.eggworld.me)
 
 ## Gameplay
 
@@ -62,13 +62,13 @@ Pressing the game title in the bottom right corner (defaults to "Computer Club")
 
 ### Main loop
 
- - The current team (left to right, begins with Red) selects a tile.
- - The host left-clicks the tile, and the announcer has 7 s to read the question before the team has 20 s to respond by pressing the buzzer.
- - The host should know the answer in advance. If the team answered incorrectly, the host should allow other teams to steal by pressing "Ready". If the team does not press the buzzer in time, other teams will automatically have the opportunity to steal.
- - Right-click the question screen to toggle showing the answer. This will automatically mark the question as completed.
- - Left-click the question screen to return to the tile board. This will not change the question status, so it is useful if the wrong tile was pressed. You typically want to right-click to complete the question then left-click to exit.
- - Right-click a tile on the tile board to toggle whether it is completed.
- - Left- / right-click on a team colour to increase / decrease their score by 100.
+- The current team (left to right, begins with Red) selects a tile.
+- The host left-clicks the tile, and the announcer has 7 s to read the question before the team has 20 s to respond by pressing the buzzer.
+- The host should know the answer in advance. If the team answered incorrectly, the host should allow other teams to steal by pressing "Ready". If the team does not press the buzzer in time, other teams will automatically have the opportunity to steal.
+- Right-click the question screen to toggle showing the answer. This will automatically mark the question as completed.
+- Left-click the question screen to return to the tile board. This will not change the question status, so it is useful if the wrong tile was pressed. You typically want to right-click to complete the question then left-click to exit.
+- Right-click a tile on the tile board to toggle whether it is completed.
+- Left- / right-click on a team colour to increase / decrease their score by 100.
 
 ### Final Jeopardy
 
