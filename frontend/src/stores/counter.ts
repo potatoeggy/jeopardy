@@ -1,5 +1,5 @@
 import { defineStore } from "pinia";
-import type { HostUser, Question } from "../types";
+import type { Board, Question } from "../types";
 
 export const useCounterStore = defineStore({
   id: "counter",
@@ -9,6 +9,7 @@ export const useCounterStore = defineStore({
     activeQuestion: null as Question | null,
     beepUsers: [] as number[],
     gameTitle: "Unknown game",
+    games: [] as Board[],
   }),
   actions: {
     toggleButtonPressed() {
@@ -22,6 +23,9 @@ export const useCounterStore = defineStore({
     },
     setCurrentGame(gameTitle: string) {
       this.gameTitle = gameTitle;
+    },
+    setGamesList(games: Board[]) {
+      this.games = games;
     },
   },
 });

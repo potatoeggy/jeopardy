@@ -11,6 +11,7 @@ const props = defineProps<{
   currentUserIndex: number; // we could put this into store
 }>();
 
+const store = useCounterStore();
 const emit = defineEmits(["request-buzzer", "next-user", "exit-card"]);
 
 const gameData: Ref<Board[]> = ref(
@@ -42,17 +43,15 @@ const gameNumberSanitised = computed(
 const currentGameMetadata = computed(
   () => gameData.value[gameNumberSanitised.value]
 );
-useCounterStore().setCurrentGame(currentGameMetadata.value.title);
+store.setCurrentGame(currentGameMetadata.value.title);
+store.setGamesList(gameData.value);
 const currentGame = computed(() => games.value[gameNumberSanitised.value]);
-
-// game state
-const turn = ref(0);
 
 watch(currentGameMetadata, (value) => {
   // don't you love it when you rush things and
   // maintain it later but then your terrible
   // rushing screws you over?
-  useCounterStore().setCurrentGame(value.title);
+  store.setCurrentGame(value.title);
 });
 
 // generate proper display board from games

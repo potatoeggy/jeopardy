@@ -52,7 +52,8 @@ const waiting = ref(true);
 const activeIndex: Ref<number[]> = ref([]);
 
 const store = useCounterStore();
-const gameNumber = ref(0);
+const gameNumberString = defineModel({ default: "0" });
+const gameNumber = computed(() => parseInt(gameNumberString.value));
 
 const animationIndex = ref(0);
 const animationOn = ref(true);
@@ -364,13 +365,32 @@ socket.onmessage = (msg) => {
         <a @click="toggleFinal">Final</a> /
         <a @click="progressFinal">Progress</a>
       </div>
-      <a @click="gameNumber++">{{ store.gameTitle }}</a>
+      <select id="game-selector" v-model="gameNumberString">
+        <option v-for="(game, i) in store.games" :key="game.title" :value="i">
+          {{ game.title }}
+        </option>
+      </select>
     </footer>
   </div>
 </template>
 
 <style scoped>
 @import "../assets/colors.css";
+
+#game-selector {
+  font-size: 1.25rem;
+  padding: 0.5rem;
+  border-radius: 0.5rem;
+  background: var(--bg);
+  outline: none;
+  border: none;
+}
+
+#game-selector:hover {
+  cursor: pointer;
+  text-decoration: underline;
+  text-decoration-skip: ink;
+}
 
 .color-bar {
   animation-name: color;
@@ -423,7 +443,8 @@ socket.onmessage = (msg) => {
   aspect-ratio: 1/1;
   background: var(--bg);
   color: white;
-  text-shadow: rgba(0, 0, 0, 0.25) 0px 0.125rem 0px,
+  text-shadow:
+    rgba(0, 0, 0, 0.25) 0px 0.125rem 0px,
     rgb(0, 0, 0) 0px 0px 0.125rem;
   font-size: 3.5vw;
   border-radius: 50%;
