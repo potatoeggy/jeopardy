@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, ref, type Ref } from "vue";
-import type { Action, HostUser, NameColor, SerialisedUser } from "../types";
+import type { Action, NameColor, SerialisedUser } from "../types";
 import IconVolumeOff from "../components/icons/IconVolumeOff.vue";
 import IconVolumeUp from "../components/icons/IconVolumeUp.vue";
 import JeopardyGame from "../components/JeopardyGame.vue";
@@ -89,10 +89,6 @@ const toggleAudio = () => {
     audioRefs.value[currentAudioRef.value].play();
   }
   audioOn.value = !audioOn.value;
-};
-
-const pointMod = (user: SerialisedUser, points: number) => {
-  user.points += points;
 };
 
 const sendReady = () => {
@@ -384,6 +380,7 @@ socket.onmessage = (msg) => {
   background: var(--bg);
   outline: none;
   border: none;
+  text-align: end;
 }
 
 #game-selector:hover {
