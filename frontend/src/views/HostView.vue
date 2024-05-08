@@ -362,7 +362,7 @@ socket.onmessage = (msg) => {
             :key="index"
             :class="[
               'big-button small-button center active-index',
-              players[index].color,
+              players[index]?.color,
             ]"
           />
         </div>
