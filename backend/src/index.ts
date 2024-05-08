@@ -12,7 +12,7 @@ server.on("connection", (socket, req) => {
     return;
   }
   const url = new URL(req.url, `http://${req.headers.host}`);
-  if (url.pathname === "/join") {
+  if (url.pathname.endsWith("/join")) {
     if (game?.hostAlive) {
       if (game.players.length >= MAX_PLAYERS) {
         socket.send(
@@ -36,7 +36,7 @@ server.on("connection", (socket, req) => {
       );
       return socket.close();
     }
-  } else if (url.pathname === "/host") {
+  } else if (url.pathname.endsWith("/host")) {
     if (game?.hostAlive) {
       console.log("ERROR creating guild: HostAlreadyTaken");
       socket.send(
