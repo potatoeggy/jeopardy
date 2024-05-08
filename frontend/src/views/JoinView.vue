@@ -5,7 +5,6 @@ import ServerErrorDialog from "../components/ServerErrorDialog.vue";
 import IconCloudOff from "../components/icons/IconCloudOff.vue";
 import IconCloudOn from "../components/icons/IconCloudOn.vue";
 
-const API_ENDPOINT = "ws://localhost:8080/join";
 const COLORS: NameColor[] = [
   "red",
   "blue",
@@ -14,7 +13,16 @@ const COLORS: NameColor[] = [
   "orange",
   "purple",
 ];
-let socket = new WebSocket(API_ENDPOINT);
+
+function getApiEndpoint() {
+  const API_ENDPOINT = "ws://localhost:8080/join";
+  const userId = localStorage.getItem("jeopardyUserId");
+  console.log(userId);
+
+  return userId ? `${API_ENDPOINT}?userId=${userId}` : API_ENDPOINT;
+}
+
+let socket = new WebSocket(getApiEndpoint());
 
 const name = ref("");
 const colorNumber: Ref<number> = ref(0);
@@ -65,7 +73,7 @@ function createSocket(newSocket: WebSocket) {
   newSocket.onclose = () => {
     serverAvailable.value = false;
     setTimeout(() => {
-      socket = new WebSocket(API_ENDPOINT);
+      const socket = new WebSocket(getApiEndpoint());
       createSocket(socket);
     }, 1000);
   };
@@ -87,8 +95,10 @@ function createSocket(newSocket: WebSocket) {
         }
         break;
       case "color":
-        if (data.number >= 0 && data.number < COLORS.length)
+        if (data.number >= 0 && data.number < COLORS.length) {
           colorNumber.value = data.number;
+        }
+        localStorage.setItem("jeopardyUserId", data.userId);
         break;
       case "final":
         clearTimeout(timeout.value);
@@ -150,7 +160,8 @@ setInterval(() => socket.send("ping!"), 10000);
   height: 60%;
   background: var(--bg);
   color: white;
-  text-shadow: rgba(0, 0, 0, 0.25) 0px 0.125rem 0px,
+  text-shadow:
+    rgba(0, 0, 0, 0.25) 0px 0.125rem 0px,
     rgb(0, 0, 0) 0px 0px 0.125rem;
   font-size: 5vw;
   border-radius: 3vmin;

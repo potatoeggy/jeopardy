@@ -35,6 +35,7 @@ export type UserAction = {
 export type ChangeColorAction = {
   action: "color";
   number: number;
+  userId: string;
 };
 
 export type FinalQuestionAction = {

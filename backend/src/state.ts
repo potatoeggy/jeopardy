@@ -92,7 +92,7 @@ export class Game {
     };
     this.host.send(userEvent);
     this.#players.forEach((u, index) =>
-      u.send({ action: "color", number: index })
+      u.send({ action: "color", number: index, userId: u.id })
     );
   }
 
@@ -100,7 +100,15 @@ export class Game {
     return this.#players;
   }
 
-  addPlayer(user: User) {
+  addPlayer(user: User, id?: string | null) {
+    if (id && this.#players.find((p) => p.id === id)) {
+      user.error("PlayerIdAlreadyExists");
+      user.socket.close();
+      return;
+    }
+    if (id) {
+      user.id = id;
+    }
     this.#players.push(user);
     user.socket.on("message", (msg) => {
       if (msg.toString() === "ping!") return;

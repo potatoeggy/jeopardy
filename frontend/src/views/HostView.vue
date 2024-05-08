@@ -32,6 +32,7 @@ const socket = new WebSocket(API_ENDPOINT);
 const serverAvailable = ref(false);
 
 const userData: Ref<SerialisedUser[]> = ref([]);
+const disconnectedUserData: Ref<SerialisedUser[]> = ref([]);
 const players = computed(() => {
   return userData.value.map((u, index) => {
     const color = COLOR_MAP[index];
@@ -185,27 +186,39 @@ socket.onopen = () => {
 socket.onclose = () => (serverAvailable.value = false);
 socket.onmessage = (msg) => {
   const data: Action = JSON.parse(msg.data);
-  console.log(data);
+  console.log("Received from server:", data);
   switch (data.action) {
     case "setname":
       break;
     case "user":
       if (data.userIds.length <= MAX_PLAYERS) {
+        // move ones that don't exist to dc'd
+        disconnectedUserData.value.push(
+          ...userData.value.filter((u) => !data.userIds.includes(u.id))
+        );
         // remove ones that don't exist
         userData.value = userData.value.filter((u) =>
           data.userIds.includes(u.id)
         );
 
-        // add ones that don't exist
-        userData.value.push(
-          ...data.userIds
-            .filter(
-              (a) => userData.value.filter((u) => u.id === a).length === 0
-            )
-            .map((id) => {
-              return { id: id, name: "", points: 0 };
-            })
+        const newUsers = data.userIds.filter(
+          (uid) => !userData.value.find((u) => u.id === uid)
         );
+
+        // restore old data if disconnected
+        for (const newUserId of newUsers) {
+          const val = disconnectedUserData.value.find(
+            ({ id }) => id === newUserId
+          );
+          if (val) {
+            disconnectedUserData.value = disconnectedUserData.value.filter(
+              ({ id }) => id !== newUserId
+            );
+            userData.value.push(val);
+          } else {
+            userData.value.push({ id: newUserId, name: "", points: 0 });
+          }
+        }
       }
       break;
     case "error":
@@ -301,8 +314,8 @@ socket.onmessage = (msg) => {
                   !activeIndex.includes(index) && !animationOn,
               },
             ]"
-            @click="user.points += 100"
-            @click.right.prevent="user.points -= 100"
+            @click="userData[index].points += 100"
+            @click.right.prevent="userData[index].points -= 100"
           >
             <div
               :class="[

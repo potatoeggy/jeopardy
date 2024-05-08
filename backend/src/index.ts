@@ -8,7 +8,11 @@ let game: Game;
 const server = new WebSocketServer({ port: 8080 });
 
 server.on("connection", (socket, req) => {
-  if (req.url?.endsWith("/join")) {
+  if (!req.url) {
+    return;
+  }
+  const url = new URL(req.url, `http://${req.headers.host}`);
+  if (url.pathname === "/join") {
     if (game?.hostAlive) {
       if (game.players.length >= MAX_PLAYERS) {
         socket.send(
@@ -20,7 +24,7 @@ server.on("connection", (socket, req) => {
         socket.close();
         return;
       }
-      game.addPlayer(new User(socket));
+      game.addPlayer(new User(socket), url.searchParams.get("userId"));
       console.log("New player joined");
     } else {
       console.log("ERROR joining guild: NoHostAvailable");
@@ -32,7 +36,7 @@ server.on("connection", (socket, req) => {
       );
       return socket.close();
     }
-  } else if (req.url?.endsWith("/host")) {
+  } else if (url.pathname === "/host") {
     if (game?.hostAlive) {
       console.log("ERROR creating guild: HostAlreadyTaken");
       socket.send(
