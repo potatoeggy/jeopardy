@@ -72,7 +72,6 @@ const finalStep = ref(0);
  * 2: show player answers
  * 3: show actual answer
  */
-const currentUserIndex = ref(0);
 const buttonCooldown = ref(false); // ignore all button presses
 
 const audioOn = ref(false);
@@ -171,11 +170,6 @@ const progressFinal = () => {
   }
 };
 
-const pushColorBar = () => {
-  colorBar.value =
-    COLOR_MAP[currentUserIndex.value % players.value.length] || null;
-};
-
 setInterval(() => animationIndex.value++, 1000);
 
 socket.onopen = () => {
@@ -239,6 +233,10 @@ socket.onmessage = (msg) => {
           activeIndex.value = [];
           store.toggleButtonPressed();
         }, 4000);
+      } else if (data.id) {
+        activeIndex.value.push(
+          players.value.findIndex((u) => u.id === data.id)
+        );
       }
       break;
     case "final":
@@ -272,15 +270,11 @@ socket.onmessage = (msg) => {
       <jeopardy-game
         :game-number="gameNumber"
         :users="players"
-        :current-user-index="currentUserIndex % players.length"
         @request-buzzer="sendReadySpecial"
-        @next-user="currentUserIndex++"
-        @exit-card="pushColorBar"
       />
 
       <div
         :class="[
-          'button-room',
           'general',
           'bg',
           colorBar,
@@ -289,75 +283,89 @@ socket.onmessage = (msg) => {
         ]"
         @animationend="colorBar = null"
       >
-        <p class="final-label" v-if="finalMode">Final Jeopardy</p>
-        <p class="final-question" v-if="finalMode">
-          <span v-if="finalStep === 0">
-            Category: {{ finalQuestion.category }} — Place your bets!
-          </span>
-          <span v-else-if="finalStep === 1">{{ finalQuestion.question }}</span>
-          <span v-else-if="finalStep === 3">{{ finalQuestion.answer }}</span>
-        </p>
-        <transition-group name="list" tag="">
-          <div
-            v-for="(user, index) in players"
-            :key="index"
-            :class="[
-              'list',
-              {
-                enabled:
-                  !waiting ||
-                  activeIndex.includes(index) ||
-                  (finalMode && finalStep === 0 && finalBets[index]) ||
-                  (finalMode && finalStep >= 1 && finalAnswers[index]),
-                'active-index': activeIndex.includes(index) && !animationOn,
-                'not-active-index':
-                  !activeIndex.includes(index) && !animationOn,
-              },
-            ]"
-            @click="userData[index].points += 100"
-            @click.right.prevent="userData[index].points -= 100"
-          >
+        <div class="button-room">
+          <p class="final-label" v-if="finalMode">Final Jeopardy</p>
+          <p class="final-question" v-if="finalMode">
+            <span v-if="finalStep === 0">
+              Category: {{ finalQuestion.category }} — Place your bets!
+            </span>
+            <span v-else-if="finalStep === 1">{{
+              finalQuestion.question
+            }}</span>
+            <span v-else-if="finalStep === 3">{{ finalQuestion.answer }}</span>
+          </p>
+          <transition-group name="list" tag="">
             <div
+              v-for="(user, index) in players"
+              :key="index"
               :class="[
-                'big-button',
-                'center',
-                user.color,
+                'list',
                 {
-                  animated:
-                    animationIndex % players.length === index && animationOn,
+                  enabled:
+                    !waiting ||
+                    activeIndex.includes(index) ||
+                    (finalMode && finalStep === 0 && finalBets[index]) ||
+                    (finalMode && finalStep >= 1 && finalAnswers[index]),
+                  'active-index': activeIndex.includes(index) && !animationOn,
+                  'not-active-index':
+                    !activeIndex.includes(index) && !animationOn,
                 },
               ]"
+              @click="userData[index].points += 100"
+              @click.right.prevent="userData[index].points -= 100"
             >
-              <p>{{ user.name }}</p>
-            </div>
+              <div
+                :class="[
+                  'big-button',
+                  'center',
+                  user.color,
+                  {
+                    animated:
+                      animationIndex % players.length === index && animationOn,
+                  },
+                ]"
+              >
+                <p>{{ user.name }}</p>
+              </div>
 
-            <p class="point-text">
-              {{ user.points }}
-            </p>
-            <p
-              class="point-text long-point-text"
-              v-if="finalMode && index <= finalIndex && finalStep >= 2"
-            >
-              Bet: {{ finalBets[index] }}
-              <br />
-              {{ finalAnswers[index] }}
-            </p>
-          </div>
-          <template v-if="players.length === 0 && !showGame">
-            <div v-if="hostAlreadyTaken" class="no-one-here">
-              Game in progress...<br />
-              Please try again later.
+              <p class="point-text">
+                {{ user.points }}
+              </p>
+              <p
+                class="point-text long-point-text"
+                v-if="finalMode && index <= finalIndex && finalStep >= 2"
+              >
+                Bet: {{ finalBets[index] }}
+                <br />
+                {{ finalAnswers[index] }}
+              </p>
             </div>
-            <div v-else-if="!serverAvailable" class="no-one-here">
-              Something went wrong...<br />
-              Please refresh the page.
-            </div>
-            <div v-else class="no-one-here">
-              No one here... <br />
-              Join at jeopardy.eggworld.me!
-            </div>
-          </template>
-        </transition-group>
+            <template v-if="players.length === 0 && !showGame">
+              <div v-if="hostAlreadyTaken" class="no-one-here">
+                Game in progress...<br />
+                Please try again later.
+              </div>
+              <div v-else-if="!serverAvailable" class="no-one-here">
+                Something went wrong...<br />
+                Please refresh the page.
+              </div>
+              <div v-else class="no-one-here">
+                No one here... <br />
+                Join at jeopardy.eggworld.me!
+              </div>
+            </template>
+          </transition-group>
+        </div>
+        <div class="answer-ball-container">
+          <div
+            v-for="index in activeIndex"
+            :key="index"
+            :class="[
+              'big-button small-button center active-index',
+              players[index].color,
+            ]"
+          />
+        </div>
       </div>
     </div>
     <footer>
@@ -385,6 +393,15 @@ socket.onmessage = (msg) => {
 
 <style scoped>
 @import "../assets/colors.css";
+
+.answer-ball-container {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 10%;
+  min-width: 5vw;
+  padding-right: 0.5vw;
+}
 
 #game-selector {
   font-size: 1.25rem;
@@ -430,6 +447,8 @@ socket.onmessage = (msg) => {
   right: 0;
   transition: all 0.5s ease;
   z-index: 10;
+  display: flex;
+  justify-content: space-between;
 }
 
 .game-container {
@@ -465,6 +484,18 @@ socket.onmessage = (msg) => {
   opacity: 0.3;
   cursor: default;
   user-select: none;
+}
+
+.big-button.small-button {
+  --width: 2.5vw;
+  font-size: 1.5vw;
+  border-bottom-width: 0.5rem;
+  cursor: default;
+  opacity: 1;
+}
+
+.general.overlay .big-button.small-button {
+  --width: 3vmin;
 }
 
 .enabled > .big-button {
@@ -511,6 +542,7 @@ socket.onmessage = (msg) => {
   justify-content: space-evenly;
   align-items: center;
   height: 100%;
+  flex-grow: 1;
 }
 
 .center {

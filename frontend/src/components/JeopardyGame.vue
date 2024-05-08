@@ -8,11 +8,10 @@ import InfoCard from "./InfoCard.vue";
 const props = defineProps<{
   gameNumber: number;
   users: HostUser[];
-  currentUserIndex: number; // we could put this into store
 }>();
 
 const store = useCounterStore();
-const emit = defineEmits(["request-buzzer", "next-user", "exit-card"]);
+const emit = defineEmits(["request-buzzer", "exit-card"]);
 
 const gameData: Ref<Board[]> = ref(
   gameJson.map((game) => {
@@ -69,10 +68,8 @@ watch(currentGameMetadata, (value) => {
           :completed="question.completed"
           :key="index"
           :users="users"
-          :current-user-index="currentUserIndex"
           @completed="question.completed = !question.completed"
           @request-buzzer="emit('request-buzzer')"
-          @next-user="emit('next-user')"
           @exit="emit('exit-card')"
         />
       </template>

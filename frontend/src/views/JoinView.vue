@@ -17,8 +17,6 @@ const COLORS: NameColor[] = [
 function getApiEndpoint() {
   const API_ENDPOINT = "ws://localhost:8080/join";
   const userId = localStorage.getItem("jeopardyUserId");
-  console.log(userId);
-
   return userId ? `${API_ENDPOINT}?userId=${userId}` : API_ENDPOINT;
 }
 

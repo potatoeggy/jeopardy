@@ -8,10 +8,9 @@ const props = defineProps<{
   completed?: boolean;
   columnNo: number;
   users: HostUser[];
-  currentUserIndex: number;
 }>();
 
-const emit = defineEmits(["completed", "exit", "request-buzzer", "next-user"]);
+const emit = defineEmits(["completed", "exit", "request-buzzer"]);
 
 // hardcoding let's go
 const offsetLeft = computed(() => {
@@ -27,8 +26,6 @@ const offsetBottom = computed(() => {
 const showQuestion = ref(false);
 const showAnswer = ref(false);
 
-const stealAllowed = ref(false);
-
 const timerNum = ref(20);
 const timerId = ref(0);
 const delayTimeoutId = ref(0);
@@ -37,8 +34,14 @@ const bgm: Ref<HTMLAudioElement | null> = ref(null);
 
 const store = useCounterStore();
 
-const requestBuzzer = (users: number[]) => {
-  store.setUsers(users);
+// if not specified, request all users
+const requestBuzzer = () => {
+  store.setUsers(
+    // [i for i in range(n)]
+    Array(props.users.length)
+      .fill(0)
+      .map((_, i) => i)
+  );
   emit("request-buzzer");
 };
 
@@ -63,37 +66,22 @@ const clickStart = () => {
   }
 
   if (showQuestion.value) {
-    delayTimeoutId.value = setTimeout(() => {
-      // kahoot music is audioref 3-5
-      timerNum.value = 20;
-      bgm.value = document.getElementById(
-        `audio-${((Math.random() * 3) | 0) + 3}`
-      ) as HTMLAudioElement;
-      bgm.value.currentTime = 0;
-      bgm.value?.play();
-      requestBuzzer([props.currentUserIndex]);
-      timerId.value = setInterval(() => {
-        timerNum.value--;
-        if (timerNum.value <= 0) {
-          const gong = document.getElementById(
-            `audio-${6}`
-          ) as HTMLAudioElement;
-          gong.play();
-          requestBuzzer(
-            (() => {
-              const a: number[] = [];
-              for (let i = 0; i < props.users.length; i++) {
-                // why isn't there an easier way
-                if (i === props.currentUserIndex) continue;
-                a.push(i);
-              }
-              return a;
-            })()
-          );
-          clearTimeout(timerId.value);
-        }
-      }, 1000);
-    }, 6000);
+    requestBuzzer();
+    // kahoot music is audioref 3-5
+    timerNum.value = 20;
+    bgm.value = document.getElementById(
+      `audio-${((Math.random() * 3) | 0) + 3}`
+    ) as HTMLAudioElement;
+    bgm.value.currentTime = 0;
+    bgm.value?.play();
+    timerId.value = setInterval(() => {
+      timerNum.value--;
+      if (timerNum.value <= 0) {
+        const gong = document.getElementById(`audio-${6}`) as HTMLAudioElement;
+        gong.play();
+        clearTimeout(timerId.value);
+      }
+    }, 1000);
   }
   showAnswer.value = false;
 };
@@ -118,7 +106,6 @@ const clickAnswer = () => {
   timerNum.value = 0;
   showAnswer.value = !showAnswer.value;
   emit("completed");
-  emit("next-user");
 };
 
 watch(store.$state, (first, second) => {
@@ -133,7 +120,10 @@ watch(store.$state, (first, second) => {
   <div>
     <div
       :class="['card', { completed, fullscreen: showQuestion }]"
-      :style="{ ['--offset-left' as any]: offsetLeft, ['--offset-bottom' as any]: offsetBottom }"
+      :style="{
+        ['--offset-left' as any]: offsetLeft,
+        ['--offset-bottom' as any]: offsetBottom,
+      }"
       @click="clickStart"
       @click.right.prevent="clickAnswer"
     >
