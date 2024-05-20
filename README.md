@@ -2,7 +2,9 @@
 
 A pretty version of Jeopardy made for Bayview's Computer Club.
 
-Demo available at https://jeopardy.eggworld.me.
+![image](https://github.com/potatoeggy/jeopardy/assets/25178974/43f1c4a2-c2e3-4397-890a-af2999f9b7fb)
+
+Demo available at https://jeopardy.eggworld.me/host. Players join at https://jeopardy.eggworld.me.
 
 The code is hackathon quality don't bother reviewing this.
 
